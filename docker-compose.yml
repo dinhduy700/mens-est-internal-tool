@@ -1,0 +1,71 @@
+name: team_tool
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: internal_tool_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "9001:9000"
+    networks:
+      - laravel
+
+  web:
+    image: nginx:alpine
+    container_name: internal_tool_web
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - laravel
+
+  db:
+    image: mysql:8.0
+    container_name: internal_tool_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3311:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - laravel
+
+  frontend:
+    image: node:20-alpine
+    container_name: internal_tool_frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      # Map thư mục source ReactJS vào container
+      - ./frontend:/app
+      # Mount node_modules ẩn để tránh xung đột môi trường giữa máy thật và Docker
+      - /app/node_modules
+    ports:
+      # Nếu bạn tạo React bằng Vite (mặc định port 5173)
+      - "3000:3000"
+      # Nếu dùng Create React App cũ, hãy đổi thành: "3000:3000"
+    command: sh -c "npm install && npm run dev"
+    environment:
+      # Cấu hình đường dẫn API trỏ về Nginx backend đang chạy ở port 8081
+      - VITE_API_BASE_URL=http://localhost:8081/api
+    networks:
+      - laravel
+
+networks:
+  laravel:
+
+volumes:
+  db_data:

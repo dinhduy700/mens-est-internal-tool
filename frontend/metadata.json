@@ -1,0 +1,6 @@
+{
+  "name": "TaskHub Pro - Quản lý Task Team",
+  "description": "Hệ thống quản lý task và sub-task cho team với Redmine link, datepicker, overview status, sort, search và blocker tracking",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
