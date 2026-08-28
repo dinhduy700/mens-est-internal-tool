@@ -17,7 +17,7 @@ return new class extends Migration
 
 			$table->string('title');
 
-			$table->string('status')->default('todo');
+			$table->tinyInteger('status')->default(1);
 
 			$table->text('note')->nullable();
 

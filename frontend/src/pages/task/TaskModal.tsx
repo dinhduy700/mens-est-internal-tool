@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { 
   X, 
   Check, 
@@ -10,23 +11,30 @@ import {
   Calendar,
   Layers
 } from 'lucide-react';
+
 import { Task, TaskEditModalState, TaskStatus } from '../types';
+import { formatDateToDMY } from '../../utils/date';
+import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '../../constants/taskStatus';
+import { PRIORITY_OPTIONS, Priority as PriorityEnum } from '../../constants/priority';
+import { Blocker as BlockerEnum } from '../../constants/blocker';
+import { taskService } from '../../services/taskService';
 
 interface TaskModalProps {
   modalState: TaskEditModalState;
+  onSuccess: () => void;
   onClose: () => void;
   onSaveTask: (task: Task) => void;
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({
   modalState,
+  onSuccess,
   onClose,
   onSaveTask,
 }) => {
-  const [taskCode, setTaskCode] = useState('');
   const [title, setTitle] = useState('');
   const [redmineUrl, setRedmineUrl] = useState('');
-  const [status, setStatus] = useState<TaskStatus>('TODO');
+  const [status, setStatus] = useState<TaskStatus>(TaskStatusEnum.NEW);
   const [priority, setPriority] = useState<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
   const [assignee, setAssignee] = useState('');
   
@@ -39,18 +47,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [releaseDate, setReleaseDate] = useState('');
 
   // Blocker & Note
-  const [hasBlocker, setHasBlocker] = useState(false);
+  const [hasBlocker, setHasBlocker] = useState(BlockerEnum.NO);
   const [blockerDescription, setBlockerDescription] = useState('');
   const [note, setNote] = useState('');
 
   // Subtasks list inside modal
   const [subtasksText, setSubtasksText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ api?: string; [key: string]: any }>({});
 
   useEffect(() => {
     if (modalState.isOpen) {
       if (modalState.task) {
         const t = modalState.task;
-        setTaskCode(t.taskCode);
         setTitle(t.title);
         setRedmineUrl(t.redmineUrl || '');
         setStatus(t.status);
@@ -73,19 +82,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       } else {
         // New Task defaults
         const today = new Date().toISOString().split('T')[0];
-        setTaskCode(`EST-${Math.floor(1000 + Math.random() * 9000)}`);
         setTitle('');
         setRedmineUrl('');
-        setStatus('TODO');
-        setPriority('Medium');
-        setAssignee('Nguyễn Đình Duy');
-        setPlanDevUp('');
-        setActDevUp('');
+        setStatus(TaskStatusEnum.NEW);
+        setPriority(PriorityEnum.LOW);
+        setAssignee('Nguyễn Đinh Duy');
+        setPlanDevUp(today);
+        setActDevUp(today);
         setCreatedAt(today);
-        setActStart('');
+        setActStart(today);
         setActEnd('');
         setReleaseDate('');
-        setHasBlocker(false);
+        setHasBlocker(BlockerEnum.NO);
         setBlockerDescription('');
         setNote('');
         setSubtasksText('');
@@ -95,50 +103,46 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
   if (!modalState.isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!taskCode.trim() || !title.trim()) return;
 
-    // Build or preserve subtasks
-    let updatedSubtasks = modalState.task?.subtasks ? [...modalState.task.subtasks] : [];
-    
-    // If creating or updated via text
-    if (!modalState.task) {
-      const lines = subtasksText
-        .split('\n')
-        .map((l) => l.trim().replace(/^[-*•]\s*/, ''))
-        .filter((l) => l.length > 0);
-      
-      updatedSubtasks = lines.map((line, idx) => ({
-        id: `sub-new-${Date.now()}-${idx}`,
-        title: line,
-        status: 'TODO',
-        createdAt: new Date().toISOString().split('T')[0],
-      }));
+    setIsSubmitting(true);
+
+    try {
+      await taskService.createTask({
+        title: title,
+        redmine_url: redmineUrl,
+        status: status,
+        priority: priority,
+        planned_dev_up: formatDateToDMY(planDevUp),
+        actual_dev_up: formatDateToDMY(actDevUp),
+        actual_start: formatDateToDMY(actStart),
+        actual_end: formatDateToDMY(actEnd),
+        release_date: formatDateToDMY(releaseDate),
+        blocker: hasBlocker,
+        note: note,
+      });
+
+      toast.success('Tạo mới công việc thành công!');
+
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (err: any) {
+        if (err.response && err.response.status === 422) {
+          const serverErrors = err.response.data.errors;
+          const formattedErrors: Record<string, string> = {};
+
+          Object.keys(serverErrors).forEach((key) => {
+            formattedErrors[key] = serverErrors[key][0];
+          });
+
+          setErrors(formattedErrors);
+        } else {
+          setErrors({ api: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
+        }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const newTask: Task = {
-      id: modalState.task?.id || `task-${Date.now()}`,
-      taskCode: taskCode.trim(),
-      title: title.trim(),
-      redmineUrl: redmineUrl.trim(),
-      status,
-      priority,
-      assignee: assignee.trim(),
-      planDevUp,
-      actDevUp,
-      createdAt: createdAt || new Date().toISOString().split('T')[0],
-      actStart,
-      actEnd,
-      releaseDate,
-      hasBlocker,
-      blockerDescription: hasBlocker ? blockerDescription.trim() : '',
-      note: note.trim(),
-      subtasks: updatedSubtasks,
-    };
-
-    onSaveTask(newTask);
-    onClose();
   };
 
   return (
@@ -176,23 +180,38 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               Thông tin cơ bản & Redmine Link
             </span>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-1">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Mã Task (ID) <span className="text-rose-500">*</span>
+                  Tiêu đề <span className="text-rose-500">*</span>
                 </label>
                 <input
-                  id="input-task-code"
+                  id="input-task-title"
                   type="text"
                   required
-                  value={taskCode}
-                  onChange={(e) => setTaskCode(e.target.value)}
-                  placeholder="VD: EST-988"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 font-semibold focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+
+                    if (errors.title) {
+                      setErrors((prev) => ({ ...prev, title: '' }));
+                    }
+                  }}
+                  placeholder="VD: EST-888"
+                  className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-slate-900 focus:outline-none transition-colors ${
+                        errors.title
+                          ? 'border-rose-500 focus:ring-2 focus:ring-rose-500'
+                          : 'border-slate-300 focus:ring-2 focus:ring-blue-600'
+                      }`}
                 />
+                {errors.title && (
+                  <p className="mt-1 text-xs text-rose-500 font-medium">
+                    {errors.title}
+                  </p>
+                )}
               </div>
 
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-1">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Redmine URL
                 </label>
@@ -201,9 +220,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                     id="input-redmine-url"
                     type="url"
                     value={redmineUrl}
-                    onChange={(e) => setRedmineUrl(e.target.value)}
+                    onChange={(e) => {
+                        setRedmineUrl(e.target.value);
+
+                        if (errors.redmine_url) {
+                          setErrors((prev) => ({ ...prev, redmine_url: '' }));
+                        }
+                    }}
                     placeholder="https://redmine.example.com/issues/988"
-                    className="w-full pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className={`w-full pl-3 pr-8 py-2 bg-white rounded-lg text-sm text-slate-900 focus:outline-none transition-colors ${
+                          errors.redmine_url
+                            ? 'border-2 border-rose-500 focus:ring-2 focus:ring-rose-500'
+                            : 'border border-slate-300 focus:ring-2 focus:ring-blue-600'
+                        }`}
                   />
                   {redmineUrl && (
                     <a
@@ -217,22 +246,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                     </a>
                   )}
                 </div>
+                 {errors.redmine_url && (
+                    <p className="mt-1 text-xs text-rose-500 font-medium">
+                      {errors.redmine_url}
+                    </p>
+                  )}
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Tên Task (Tiêu đề) <span className="text-rose-500">*</span>
-              </label>
-              <input
-                id="input-task-title"
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="VD: Implement new API endpoint for user auth & session management"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-none"
-              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -245,10 +264,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   onChange={(e) => setStatus(e.target.value as TaskStatus)}
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 cursor-pointer"
                 >
-                  <option value="TODO">Chưa làm (To Do)</option>
-                  <option value="DOING">Đang làm (Doing)</option>
-                  <option value="DONE">Hoàn thành (Done)</option>
-                  <option value="BLOCKED">Bị chặn (Blocked)</option>
+                    {TASK_STATUS_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -261,10 +281,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   onChange={(e) => setPriority(e.target.value as any)}
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 cursor-pointer"
                 >
-                  <option value="Low">Thấp (Low)</option>
-                  <option value="Medium">Trung bình (Medium)</option>
-                  <option value="High">Cao (High)</option>
-                  <option value="Urgent">Khẩn cấp (Urgent)</option>
+                  { PRIORITY_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                  ))}
                 </select>
               </div>
 
@@ -276,7 +297,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   type="text"
                   value={assignee}
                   onChange={(e) => setAssignee(e.target.value)}
-                  placeholder="VD: Nguyễn Đình Duy"
+                  placeholder="VD: Nguyễn Đinh Duy"
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600"
                 />
               </div>
@@ -447,7 +468,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!taskCode.trim() || !title.trim()}
+            disabled={isSubmitting}
             className="px-5 py-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg flex items-center gap-1.5 shadow-sm shadow-blue-900/30 transition-colors cursor-pointer"
           >
             <Check className="w-4 h-4" />

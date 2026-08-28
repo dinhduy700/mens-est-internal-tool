@@ -25,9 +25,9 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const topTabs = [
     { id: 'dashboard', label: 'Dashboard' },
-    { id: 'team', label: 'Team Members' },
-    { id: 'analytics', label: 'Analytics' },
-    { id: 'reports', label: 'Báo Cáo' },
+//     { id: 'team', label: 'Team Members' },
+//     { id: 'analytics', label: 'Analytics' },
+//     { id: 'reports', label: 'Báo Cáo' },
   ];
 
   const currentDate = new Date().toLocaleDateString('vi-VN', {
@@ -55,10 +55,10 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <h1 className="font-bold text-slate-900 text-lg tracking-tight leading-none">
-              TaskHub Pro
+              X
             </h1>
             <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
-              Project Alpha • Sprint 24
+              Project Alpha • 2026
             </span>
           </div>
         </div>
@@ -118,9 +118,9 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="hidden sm:block text-left">
             <div className="text-xs font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
-              Nguyễn Đình Duy
+              Nguyễn Đinh Duy
             </div>
-            <div className="text-[10px] text-slate-500 font-medium">Lead Developer</div>
+            <div className="text-[10px] text-slate-500 font-medium">Senior Developer</div>
           </div>
         </div>
       </div>

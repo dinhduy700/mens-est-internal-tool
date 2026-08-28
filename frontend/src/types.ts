@@ -1,4 +1,4 @@
-export type TaskStatus = 'TODO' | 'DOING' | 'DONE' | 'BLOCKED';
+export type TaskStatus = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface SubTask {
   id: string;

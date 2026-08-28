@@ -4,6 +4,9 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import { 
   Task, 
   SubTask, 
@@ -21,12 +24,12 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OverviewCards } from './components/OverviewCards';
 import { Toolbar } from './components/Toolbar';
-import { TaskTable } from './components/TaskTable';
-import { TaskModal } from './components/TaskModal';
-import { SubtaskModal } from './components/SubtaskModal';
-import { DateEditModal } from './components/DateEditModal';
-import { BlockerModal } from './components/BlockerModal';
-import { NoteModal } from './components/NoteModal';
+import { TaskTable } from './pages/task/TaskTable';
+import { TaskModal } from './pages/task/TaskModal';
+import { SubtaskModal } from './pages/task/SubtaskModal';
+import { DateEditModal } from './pages/task/DateEditModal';
+import { BlockerModal } from './pages/task/BlockerModal';
+import { NoteModal } from './pages/task/NoteModal';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -548,116 +551,7 @@ export default function App() {
             totalFilteredCount={filteredTasks.length}
           />
 
-          {/* 3. Table with all requested columns 2.1 - 2.12 */}
-          <TaskTable
-            tasks={paginatedTasks}
-            onOpenTaskModal={(task, targetFocus) =>
-              setTaskModalState({ isOpen: true, mode: 'edit', task, targetFocus })
-            }
-            onOpenSubtaskModal={(parentTaskId, parentTaskCode, subtask) =>
-              setSubtaskModalState({
-                isOpen: true,
-                parentTaskId,
-                parentTaskCode,
-                subtask,
-                mode: subtask ? 'edit' : 'add',
-              })
-            }
-            onOpenDateModal={(
-              taskId,
-              taskCode,
-              fieldName,
-              fieldLabel,
-              currentValue
-            ) =>
-              setDateModalState({
-                isOpen: true,
-                taskId,
-                taskCode,
-                fieldName,
-                fieldLabel,
-                currentValue,
-              })
-            }
-            onOpenBlockerModal={(task) =>
-              setBlockerModalState({
-                isOpen: true,
-                taskId: task.id,
-                taskCode: task.taskCode,
-                hasBlocker: task.hasBlocker,
-                blockerDescription: task.blockerDescription,
-              })
-            }
-            onOpenNoteModal={(task) =>
-              setNoteModalState({
-                isOpen: true,
-                taskId: task.id,
-                taskCode: task.taskCode,
-                note: task.note,
-              })
-            }
-            onUpdateSubtaskStatus={handleUpdateSubtaskStatus}
-            onDeleteSubtask={handleDeleteSubtask}
-            onDeleteTask={handleDeleteTask}
-            onDuplicateTask={handleDuplicateTask}
-          />
-
-          {/* Pagination bar */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 px-2 pb-12">
-            <div>
-              Hiển thị{' '}
-              <span className="font-semibold text-slate-800">
-                {filteredTasks.length === 0
-                  ? 0
-                  : (currentPage - 1) * itemsPerPage + 1}
-              </span>{' '}
-              đến{' '}
-              <span className="font-semibold text-slate-800">
-                {Math.min(currentPage * itemsPerPage, filteredTasks.length)}
-              </span>{' '}
-              trong tổng số{' '}
-              <span className="font-semibold text-slate-800">
-                {filteredTasks.length}
-              </span>{' '}
-              tasks
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                title="Trang trước"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`w-7 h-7 rounded-md text-xs font-semibold transition-colors ${
-                    currentPage === pageNum
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              ))}
-
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(p + 1, totalPages))
-                }
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                title="Trang sau"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          <TaskTable />
         </main>
       </div>
 
@@ -714,6 +608,19 @@ export default function App() {
           <span>{toastMessage}</span>
         </div>
       )}
+
+      <ToastContainer
+          position="top-right"
+          autoClose={3000} // Tự động đóng sau 3 giây
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
     </div>
   );
 }

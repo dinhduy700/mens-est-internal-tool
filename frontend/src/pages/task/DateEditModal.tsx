@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Check, Trash2 } from 'lucide-react';
 import { DateEditModalState } from '../types';
-import { formatDateForInput } from '../utils/date';
+import { formatDateForInput } from '../../utils/date';
 
 interface DateEditModalProps {
   modalState: DateEditModalState;

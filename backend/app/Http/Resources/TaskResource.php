@@ -35,7 +35,7 @@ class TaskResource extends JsonResource
 			'actual_start'   => $this->actual_start   ? Carbon::parse($this->actual_start)->format('d/m/Y') : null,
 			'actual_end'     => $this->actual_end     ? Carbon::parse($this->actual_end)->format('d/m/Y') : null,
 			'release_date'   => $this->release_date   ? Carbon::parse($this->release_date)->format('d/m/Y') : null,
-			'created_at'     => $this->created_at ? Carbon::parse($this->created_at)->format('d/m/Y H:i:s') : null,
+			'created_at'     => $this->created_at ? Carbon::parse($this->created_at)->format('d/m/Y') : null,
 
 			'subtasks'       => $this->subtasks ?? [],
 		];
