@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 import {
   Edit,
   Plus,
@@ -29,6 +30,7 @@ import {
   NoteModalState
 } from '../types';
 import { formatDateDisplay } from '../../utils/date';
+import { confirmDeleteSwal } from '../../utils/sweetAlert';
 
 import { taskService } from '../../services/taskService';
 import { getPriorityInfo } from '../../constants/priority.ts';
@@ -275,57 +277,28 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
 };
 /* Save Date --- end*/
 
-  const handleDeleteSubtask = (taskId: string, subtaskId: string) => {
-    toast(
-      ({ closeToast }) => (
-        <div className="p-1">
-          <p className="text-sm font-semibold text-slate-800 mb-1">
-            Xác nhận xóa Subtask: {subtaskId}
-          </p>
-          <p className="text-xs text-slate-500 mb-3">
-            Hành động này không thể hoàn tác.
-          </p>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={closeToast}
-              className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-            >
-              Hủy
-            </button>
-            <button
-              onClick={async () => {
-                closeToast(); // Đóng confirm toast
-                try {
-                  // Gọi API Xóa
-                  await taskService.deleteSubtask(taskId, subtaskId);
-                  toast.success('Xóa công việc thành công!');
-                  fetchTasks();
-                  // Re-fetch hoặc update state UI ở đây...
-                } catch (error) {
-                  toast.error('Có lỗi xảy ra khi xóa!');
-                }
-              }}
-              className="px-3 py-1.5 text-xs bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-md shadow-xs transition-colors cursor-pointer"
-            >
-              Đồng ý xóa
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        position: 'top-center',
-        autoClose: false, //  BẮT BỘC: Để Toast không tự đóng khi chưa bấm chọn
-        closeOnClick: false, // Không đóng khi click vào vùng trống
-        draggable: false,
-        closeButton: false, // Ẩn nút X mặc định
+  const handleDeleteSubtask = async (taskId: string, subtaskId: string) => {
+    // 1. Gọi SweetAlert2 thông qua helper đã thiết kế sẵn
+    const result = await confirmDeleteSwal({
+      title: 'Cảnh Báo Nguy Hiểm',
+      itemCode: subtaskId,
+    });
+
+    // 2. Nếu bấm Hủy Bỏ -> Dừng lại
+    if (!result.isConfirmed) return;
+
+    // 3. Thực thi API xóa
+    try {
+      await taskService.deleteSubtask(taskId, subtaskId);
+      toast.success('Đã xóa vĩnh viễn subtask!');
+      if (typeof fetchTasks === 'function') {
+        fetchTasks();
       }
-      );
+    } catch (error) {
+      toast.error('Có lỗi xảy ra, không thể xóa!');
+    }
   };
-//
-//   const handleDeleteTask = (taskId: string) => {
-//     if (!window.confirm('Bạn có chắc chắn muốn xóa Task này?')) return;
-//     setTasks((prev) => prev.filter((task) => task.id !== taskId));
-//   };
+
 //
 //   const handleDuplicateTask = (task: Task) => {
 //     const duplicatedTask: Task = {
