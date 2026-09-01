@@ -129,8 +129,26 @@ export function computeTaskStats(tasks: Task[]) {
   };
 }
 
-export const formatDateToDMY = (dateString: string): string => {
-  if (!dateString) return '';
-  const [year, month, day] = dateString.split('-');
-  return `${day}/${month}/${year}`;
+export const formatDateToDMY = (dateStr: string | null | undefined): string => {
+  // 1. Kiểm tra nếu rỗng, null hoặc undefined
+  if (!dateStr || dateStr.trim() === '') return '';
+
+  // 2. Nếu ĐÃ LÀ dạng "DD/MM/YYYY" sẵn rồi (chứa dấu /) -> Giữ nguyên, trả về luôn
+  if (dateStr.includes('/')) {
+    return dateStr;
+  }
+
+  // 3. Nếu là dạng "YYYY-MM-DD" từ input date (chứa dấu -) -> Convert sang "DD/MM/YYYY"
+  if (dateStr.includes('-')) {
+    // Tách phần ngày bỏ phần giờ ISO (nếu có)
+    const cleanDate = dateStr.split('T')[0];
+    const parts = cleanDate.split('-');
+
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+    }
+  }
+
+  return dateStr;
 };

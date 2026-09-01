@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import {
   Edit,
   Plus,
@@ -31,12 +32,14 @@ import { formatDateDisplay } from '../../utils/date';
 
 import { taskService } from '../../services/taskService';
 import { getPriorityInfo } from '../../constants/priority.ts';
+import { formatDateToDMY } from '../../utils/date';
 import { TASK_STATUS_OPTIONS, getStatusBadgeConfig, TaskStatus as TaskStatusEnum } from '../../constants/taskStatus';
-//frontend/src/constants/priority.ts
 // Import các Modal Components của bạn ở đây:
 import { TaskModal } from './TaskModal';
-// import { SubtaskModal } from '../modal/SubtaskModal';
-// import { DateEditModal } from '../modal/DateEditModal';
+import { SubtaskModal } from './/SubtaskModal';
+import { DateEditModal } from './DateEditModal';
+import { Toolbar } from './Toolbar';
+
 // import { BlockerModal } from '../modal/BlockerModal';
 // import { NoteModal } from '../modal/NoteModal';
 
@@ -53,6 +56,7 @@ export const TaskTable: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [activeMenuTaskId, setActiveMenuTaskId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [modalErrors, setModalErrors] = useState<Record<string, string>>({});
 
   // 2. Pagination State
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -81,19 +85,19 @@ export const TaskTable: React.FC = () => {
     isOpen: false,
     mode: 'add',
   });
-//   const [subtaskModalState, setSubtaskModalState] = useState<SubtaskModalState>({
-//     isOpen: false,
-//     parentTaskId: '',
-//     parentTaskCode: '',
-//   });
-//   const [dateModalState, setDateModalState] = useState<DateEditModalState>({
-//     isOpen: false,
-//     taskId: '',
-//     taskCode: '',
-//     fieldName: 'planDevUp',
-//     fieldLabel: '',
-//     currentValue: '',
-//   });
+  const [subtaskModalState, setSubtaskModalState] = useState<SubtaskModalState>({
+    isOpen: false,
+    taskId: '',
+    taskTitle: '',
+  });
+  const [dateModalState, setDateModalState] = useState<DateEditModalState>({
+    isOpen: false,
+    taskId: '',
+    taskTitle: '',
+    fieldName: 'planned_dev_up',
+    fieldLabel: '',
+    currentValue: '',
+  });
 //   const [blockerModalState, setBlockerModalState] = useState<BlockerModalState>({
 //     isOpen: false,
 //     taskId: '',
@@ -129,41 +133,44 @@ export const TaskTable: React.FC = () => {
 //   }, [filteredTasks, currentPage, itemsPerPage]);
 //
 //   // 6. Action Handlers
-//   const handleOpenTaskModal = (task?: Task, targetFocus?: 'redmine' | 'all') => {
-//     setTaskModalState({
-//       isOpen: true,
-//       mode: task ? 'edit' : 'add',
-//       task,
-//       targetFocus,
-//     });
-//   };
+  const handleOpenTaskModal = (task?: Task, targetFocus?: 'redmine' | 'all') => {
+    const isEdit = Boolean(task && task.id);
+    setTaskModalState({
+      isOpen: true,
+      mode: isEdit ? 'edit' : 'add',
+      task,
+      targetFocus,
+    });
+  };
 
-//   const handleOpenSubtaskModal = (parentTaskId: string, parentTaskCode: string, subtask?: SubTask) => {
-//     setSubtaskModalState({
-//       isOpen: true,
-//       parentTaskId,
-//       parentTaskCode,
-//       subtask,
-//       mode: subtask ? 'edit' : 'add',
-//     });
-//   };
-//
-//   const handleOpenDateModal = (
-//     taskId: string,
-//     taskCode: string,
-//     fieldName: DateFieldType,
-//     fieldLabel: string,
-//     currentValue: string
-//   ) => {
-//     setDateModalState({
-//       isOpen: true,
-//       taskId,
-//       taskCode,
-//       fieldName,
-//       fieldLabel,
-//       currentValue,
-//     });
-//   };
+  const handleOpenSubtaskModal = (parentTaskId: string, parentTaskTitle: string, subtask?: SubTask) => {
+    setSubtaskModalState({
+      isOpen: true,
+      parentTaskId,
+      parentTaskTitle,
+      subtask,
+      mode: subtask ? 'edit' : 'add',
+    });
+  };
+
+  const handleOpenDateModal = (
+    isOpen: boolean,
+    taskId: string,
+    taskTitle: string,
+    fieldName: DateFieldType,
+    fieldLabel: string,
+    currentValue: string
+  ) => {
+    setModalErrors({});
+    setDateModalState({
+      isOpen: true,
+      taskId: taskId,
+      taskTitle: taskTitle,
+      fieldName: fieldName,
+      fieldLabel: fieldLabel,
+      currentValue: currentValue,
+    });
+  };
 //
 //   const handleOpenBlockerModal = (task: Task) => {
 //     setBlockerModalState({
@@ -198,14 +205,15 @@ export const TaskTable: React.FC = () => {
 //     );
 //   };
 
-
-const handleUpdateSubtaskStatus = (
-  taskId: string | number,
-  subtaskId: string | number,
+/* update status subtask --- start ---- */
+const handleUpdateSubtaskStatus = async (
+  taskId: number | string,
+  subtaskId: number | string,
   newStatus: TaskStatus
 ) => {
+  // 1. Cập nhật State UI trước (Optimistic UI)
   setTasks((prevTasks: any) => ({
-    ...prevTasks, // Giữ nguyên các thông tin links, meta...
+    ...prevTasks,
     data: (prevTasks.data || []).map((task: any) => {
       if (task.id !== taskId) return task;
 
@@ -213,33 +221,106 @@ const handleUpdateSubtaskStatus = (
         ...task,
         subtasks: task.subtasks?.map((sub: any) => {
           if (sub.id !== subtaskId) return sub;
-          return { ...sub, status: newStatus }; // Cập nhật status mới
+          return { ...sub, status: newStatus };
         }),
       };
     }),
   }));
 
-  // Nếu có gọi API cập nhật Backend:
-  // subtaskService.updateStatus(subtaskId, newStatus);
-// };
-
-  // Nếu có call API cập nhật subtask ở Backend, bạn gọi ở đây:
-  // subtaskService.updateStatus(subtaskId, newStatus);
+  // 2. Gọi API cập nhật Backend
+  try {
+    await taskService.updateSubtaskStatus(taskId, subtaskId, newStatus);
+    toast.success('Cập nhật trạng thái subtask thành công!');
+  } catch (error) {
+    console.error('Lỗi khi cập nhật trạng thái subtask:', error);
+    alert('Cập nhật trạng thái thất bại, vui lòng thử lại!');
+  }
 };
+/* update status subtask --- end ---- */
 
-//
-//   const handleDeleteSubtask = (taskId: string, subtaskId: string) => {
-//     if (!window.confirm('Bạn có chắc chắn muốn xóa sub-task này?')) return;
-//     setTasks((prev) =>
-//       prev.map((task) => {
-//         if (task.id !== taskId) return task;
-//         return {
-//           ...task,
-//           subtasks: task.subtasks?.filter((sub) => sub.id !== subtaskId),
-//         };
-//       })
-//     );
-//   };
+/* Save Date --- start ---- */
+const handleSaveDate = async (taskId: string, fieldName: string, newDate: string) => {
+  // 1. Cập nhật State UI ngay lập tức (Optimistic UI)
+  setTasks((prevTasks: any) => ({
+    ...prevTasks,
+    data: (prevTasks.data || []).map((task: any) => {
+      if (String(task.id) !== String(taskId)) return task;
+      return {
+        ...task,
+        [fieldName]: formatDateToDMY(newDate), // Cập nhật cột ngày tương ứng
+      };
+    }),
+  }));
+
+  // 2. Gọi Service để gửi API lên Backend
+  try {
+    await taskService.updateTaskDate(taskId, fieldName, formatDateToDMY(newDate));
+     toast.success('Cập nhật ngày thành công!');
+  } catch (error) {
+     if (error.response && error.response.status === 422) {
+      const apiErrors = error.response.data.errors;
+      const formattedErrors: Record<string, string> = {};
+
+      Object.keys(apiErrors).forEach((key) => {
+        formattedErrors[key] = apiErrors[key][0];
+      });
+
+      setModalErrors(formattedErrors);
+    } else {
+      setModalErrors({
+        [fieldName]: 'Có lỗi xảy ra, vui lòng thử lại sau!',
+      });
+    }
+  }
+};
+/* Save Date --- end*/
+
+  const handleDeleteSubtask = (taskId: string, subtaskId: string) => {
+    toast(
+      ({ closeToast }) => (
+        <div className="p-1">
+          <p className="text-sm font-semibold text-slate-800 mb-1">
+            Xác nhận xóa Subtask: {subtaskId}
+          </p>
+          <p className="text-xs text-slate-500 mb-3">
+            Hành động này không thể hoàn tác.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={closeToast}
+              className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={async () => {
+                closeToast(); // Đóng confirm toast
+                try {
+                  // Gọi API Xóa
+                  await taskService.deleteSubtask(taskId, subtaskId);
+                  toast.success('Xóa công việc thành công!');
+                  fetchTasks();
+                  // Re-fetch hoặc update state UI ở đây...
+                } catch (error) {
+                  toast.error('Có lỗi xảy ra khi xóa!');
+                }
+              }}
+              className="px-3 py-1.5 text-xs bg-rose-600 hover:bg-rose-500 text-white font-medium rounded-md shadow-xs transition-colors cursor-pointer"
+            >
+              Đồng ý xóa
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        position: 'top-center',
+        autoClose: false, //  BẮT BỘC: Để Toast không tự đóng khi chưa bấm chọn
+        closeOnClick: false, // Không đóng khi click vào vùng trống
+        draggable: false,
+        closeButton: false, // Ẩn nút X mặc định
+      }
+      );
+  };
 //
 //   const handleDeleteTask = (taskId: string) => {
 //     if (!window.confirm('Bạn có chắc chắn muốn xóa Task này?')) return;
@@ -270,57 +351,45 @@ const handleUpdateSubtaskStatus = (
     { key: 'release_date', label: 'Release Date', shortLabel: 'Release Date' },
   ];
 
+
+/* Mockdata sẽ xóa ==== start ==== */
+// 1. Mock State cho filterState
+  const [filterState, setFilterState] = useState({
+    search: '',
+    status: 'ALL',
+    priority: 'ALL',
+    assignee: 'ALL',
+    dateRange: {
+      from: '',
+      to: '',
+    },
+  });
+
+  // 2. Mock tổng số bản ghi đã filter
+  const totalFilteredCount = 12;
+
+  // 3. Mock Handler cho các nút hành động (Button Click Events)
+  const handleOpenCreateModal = () => {
+    console.log('Mock: Mở modal tạo Task');
+    alert('Mở modal tạo mới Task');
+  };
+
+  const handleExportCSV = () => {
+    console.log('Mock: Xuất file CSV với filter:', filterState);
+    alert('Đang xuất file CSV...');
+  };
+/* Mockdata sẽ xóa ==== end ==== */
+
   return (
     <div className="w-full">
       {/* Search & Filter Header Bar */}
-      <div className="bg-white p-3 border border-slate-200 rounded-t-xl flex flex-wrap items-center justify-between gap-3 border-b-0">
-        <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1); // Reset về trang 1 khi gõ tìm kiếm
-              }}
-              placeholder="Tìm kiếm theo mã task, tiêu đề..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1); // Reset về trang 1 khi chọn lọc
-              }}
-              className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-600 font-medium cursor-pointer"
-            >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="TODO">To Do</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="DONE">Done</option>
-              <option value="BLOCKED">Blocked</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-xs text-slate-500 font-medium">
-            Tổng số: <span className="font-bold text-slate-800">{filteredTasks.length}</span> tasks
-          </div>
-          <button
-            onClick={() => handleOpenTaskModal()}
-            className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Tạo Task</span>
-          </button>
-        </div>
-      </div>
+      <Toolbar
+        filterState={filterState}
+        setFilterState={setFilterState}
+        onOpenCreateModal={handleOpenTaskModal}
+        onExportCSV={handleExportCSV}
+        totalFilteredCount={totalFilteredCount}
+      />
 
       {/* Main Table Content */}
       {(tasks.length == 0) ? (
@@ -349,7 +418,7 @@ const handleUpdateSubtaskStatus = (
                   <th className="sticky left-[288px] z-20 bg-slate-100 py-3 px-4 w-72 min-w-[270px] border-b border-r border-slate-200">
                     Sub-task
                   </th>
-                  <th className="sticky left-[558px] z-20 bg-slate-100 py-3 px-3 w-32 min-w-[130px] border-b border-r-2 border-slate-300 text-center shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]">
+                  <th className="sticky left-[558px] z-20 bg-slate-100 py-3 px-3 w-32 min-w-[150px] border-b border-r-2 border-slate-300 text-center shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]">
                     Status
                   </th>
                   <th className="py-3 px-3 w-28 min-w-[110px] text-right border-b border-r border-slate-200 bg-slate-100">Plan DevUp</th>
@@ -367,7 +436,7 @@ const handleUpdateSubtaskStatus = (
               {/* Table Body (Sử dụng paginatedTasksThay vì tasks) */}
               <tbody className="text-xs text-slate-800 align-top">
                 {tasks.data.map((task, index) => {
-                  const isDone = task.status === 'DONE';
+                  const isDone = task.status === 7;
                   const rowBgClass = isDone
                     ? 'bg-slate-50 group-hover:bg-blue-50/50'
                     : 'bg-white group-hover:bg-blue-50/50';
@@ -468,10 +537,16 @@ const handleUpdateSubtaskStatus = (
                                       </select>
 
                                       <button
-                                        onClick={() => handleDeleteSubtask(task.id, sub.id)}
-                                        className="p-0.5 text-slate-300 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                                        onClick={() => handleOpenSubtaskModal(task.id, task.title, sub)}
+                                        className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
                                       >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Edit className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteSubtask(task.id, sub.id)}
+                                        className="text-slate-300 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
                                       </button>
                                     </div>
                                   </div>
@@ -486,11 +561,11 @@ const handleUpdateSubtaskStatus = (
 
                           <div className="p-2 border-t border-slate-100 bg-slate-50/50 mt-auto">
                             <button
-                              onClick={() => handleOpenSubtaskModal(task.id, task.taskCode)}
+                              onClick={() => handleOpenSubtaskModal(task.id, task.title)}
                               className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 py-0.5 px-1.5 rounded hover:bg-blue-50 transition-colors cursor-pointer"
                             >
                               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                              <span>Add Sub-task</span>
+                              <span>Tạo Sub-task</span>
                             </button>
                           </div>
                         </div>
@@ -507,7 +582,9 @@ const handleUpdateSubtaskStatus = (
                                 {formatted}
                               </span>
                               <button
-                                onClick={() => handleOpenDateModal(task.id, task.taskCode, col.key, col.label, rawVal)}
+                                onClick={() => {
+                                  handleOpenDateModal(true, task.id, task.title, col.key, col.label, rawVal);
+                                }}
                                 className="p-0.5 text-slate-300 group-hover/cell:text-blue-600 hover:bg-blue-50 rounded transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                               >
                                 <Edit className="w-3 h-3" />
@@ -644,21 +721,39 @@ const handleUpdateSubtaskStatus = (
       {/* Render các Modals ngay tại đây khi state isOpen = true */}
       {taskModalState.isOpen && (
         <TaskModal
+          modalState={taskModalState}
           onClose={() => setTaskModalState((prev) => ({ ...prev, isOpen: false }))}
-          onSuccess={() => {
-            // Callback reload lại danh sách hoặc fetch lại API
-          }}
+          onSuccess={fetchTasks}
         />
       )}
 
-      {/*
-      {subtaskModalState.isOpen && (
-        <SubtaskModal
-          state={subtaskModalState}
-          onClose={() => setSubtaskModalState(prev => ({ ...prev, isOpen: false }))}
+      {dateModalState.isOpen && (
+        <DateEditModal
+          modalState={dateModalState}
+          errors={modalErrors}
+          onClose={() =>
+            setDateModalState((prev) => ({
+             ...prev,
+             isOpen: false,
+           }))
+          }
+         onSaveDate={handleSaveDate}
         />
       )}
-      */}
+
+      {subtaskModalState.isOpen && (
+        <SubtaskModal
+          modalState={subtaskModalState}
+          errors={modalErrors}
+          onClose={() =>
+            setSubtaskModalState((prev) => ({
+             ...prev,
+             isOpen: false,
+           }))
+          }
+         onSuccess={fetchTasks}
+        />
+        )}
     </div>
   );
 };

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 import { Task, TaskEditModalState, TaskStatus } from '../types';
-import { formatDateToDMY } from '../../utils/date';
+import { formatDateToDMY, formatDateForInput, formatDateDisplay } from '../../utils/date';
 import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '../../constants/taskStatus';
 import { PRIORITY_OPTIONS, Priority as PriorityEnum } from '../../constants/priority';
 import { Blocker as BlockerEnum } from '../../constants/blocker';
@@ -58,20 +58,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
   useEffect(() => {
     if (modalState.isOpen) {
-      if (modalState.task) {
+      if (modalState.mode === 'edit') {
         const t = modalState.task;
         setTitle(t.title);
-        setRedmineUrl(t.redmineUrl || '');
+        setRedmineUrl(t.redmine_url || '');
         setStatus(t.status);
-        setPriority(t.priority || 'Medium');
-        setAssignee(t.assignee || '');
-        setPlanDevUp(t.planDevUp || '');
-        setActDevUp(t.actDevUp || '');
-        setCreatedAt(t.createdAt || '');
-        setActStart(t.actStart || '');
-        setActEnd(t.actEnd || '');
-        setReleaseDate(t.releaseDate || '');
-        setHasBlocker(t.hasBlocker);
+        setPriority(t.priority || 1);
+        setPlanDevUp(t.planned_dev_up || '');
+        setActDevUp(t.actual_dev_up || '');
+        setCreatedAt(t.created_at || '');
+        setActStart(t.actual_start || '');
+        setActEnd(t.actual_end || '');
+        setReleaseDate(t.release_date || '');
+        setHasBlocker(t.blocker);
         setBlockerDescription(t.blockerDescription || '');
         setNote(t.note || '');
         setSubtasksText(
@@ -104,26 +103,32 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   if (!modalState.isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
 
     setIsSubmitting(true);
+    const payload = {
+      title: title,
+      redmine_url: redmineUrl,
+      status: status,
+      priority: priority,
+      planned_dev_up: formatDateToDMY(planDevUp),
+      actual_dev_up: formatDateToDMY(actDevUp),
+      actual_start: formatDateToDMY(actStart),
+      actual_end: formatDateToDMY(actEnd),
+      release_date: formatDateToDMY(releaseDate),
+      blocker: hasBlocker,
+      note: note,
+    };
 
     try {
-      await taskService.createTask({
-        title: title,
-        redmine_url: redmineUrl,
-        status: status,
-        priority: priority,
-        planned_dev_up: formatDateToDMY(planDevUp),
-        actual_dev_up: formatDateToDMY(actDevUp),
-        actual_start: formatDateToDMY(actStart),
-        actual_end: formatDateToDMY(actEnd),
-        release_date: formatDateToDMY(releaseDate),
-        blocker: hasBlocker,
-        note: note,
-      });
-
-      toast.success('Tạo mới công việc thành công!');
+        if (modalState.mode === 'edit') {
+          await taskService.updateTask(modalState.task.id, payload);
+          toast.success('Cập nhật công việc thành công!');
+        } else {
+          await taskService.createTask(payload);
+          toast.success('Tạo mới công việc thành công!');
+        }
 
       if (onSuccess) onSuccess();
       onClose();
@@ -318,7 +323,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  value={planDevUp}
+                  value={formatDateForInput(planDevUp)}
                   onChange={(e) => setPlanDevUp(e.target.value)}
                   className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-600"
                 />
@@ -330,7 +335,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  value={actDevUp}
+                  value={formatDateForInput(actDevUp)}
                   onChange={(e) => setActDevUp(e.target.value)}
                   className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-600"
                 />
@@ -342,7 +347,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  value={createdAt}
+                  value={formatDateForInput(createdAt)}
                   onChange={(e) => setCreatedAt(e.target.value)}
                   className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-600"
                 />
@@ -354,7 +359,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  value={actStart}
+                  value={formatDateForInput(actStart)}
                   onChange={(e) => setActStart(e.target.value)}
                   className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-600"
                 />
@@ -366,7 +371,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  value={actEnd}
+                  value={formatDateForInput(actEnd)}
                   onChange={(e) => setActEnd(e.target.value)}
                   className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-600"
                 />
@@ -378,7 +383,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  value={releaseDate}
+                  value={formatDateForInput(releaseDate)}
                   onChange={(e) => setReleaseDate(e.target.value)}
                   className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-600"
                 />

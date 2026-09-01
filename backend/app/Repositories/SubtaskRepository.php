@@ -42,42 +42,49 @@ class SubtaskRepository
 	/**
 	 * Cập nhật thông tin subtask
 	 */
-	public function update(int $id, array $data)
+	public function update(int $taskId, int $id, array $data)
 	{
 		$updateData = [
 			'title'      => $data['title'],
 			'status'     => $data['status'],
 			'note'       => $data['note'] ?? null,
-			'updated_at' => now(), // Cập nhật thời gian sửa
+			'updated_at' => now(),
 		];
 
-		DB::table('subtasks')->where('id', $id)->update($updateData);
+		DB::table('subtasks')
+			->where('task_id', $taskId)
+			->where('id', $id)
+			->update($updateData);
 
 		// Lấy lại dữ liệu mới nhất để trả về
 		return $this->findById($id);
 	}
 
-	public function delete(int $id): bool
+	public function delete(int $taskId, int $id): bool
 	{
-		// Hàm delete() của Query Builder sẽ trả về số lượng dòng bị xóa
-		// Nếu > 0 nghĩa là xóa thành công
-		return DB::table('subtasks')->where('id', $id)->delete() > 0;
+		return DB::table('subtasks')
+				->where('task_id', $taskId)
+				->where('id', $id)
+				->delete() > 0;
 	}
 
-	/**
-	 * Cập nhật riêng trạng thái của 1 subtask
-	 */
-	public function updateStatus(int $id, int $status)
+	public function findByIdAndTaskId(int $taskId, int $subtaskId)
 	{
-		DB::table('subtasks')
-			->where('id', $id)
-			->update([
-				'status'     => $status,
-				'updated_at' => now(), // Luôn nhớ cập nhật thời gian sửa
-			]);
+		return DB::table('subtasks')
+			->where('id', $subtaskId)
+			->where('task_id', $taskId)
+			->first();
+	}
 
-		// Lấy lại dữ liệu subtask mới nhất để trả về
-		return $this->findById($id);
+	public function updateStatus(int $taskId, int $subtaskId, int $status): bool
+	{
+		return DB::table('subtasks')
+				->where('id', $subtaskId)
+				->where('task_id', $taskId)
+				->update([
+					'status'     => $status,
+					'updated_at' => now(),
+				]) > 0;
 	}
 
 	/**

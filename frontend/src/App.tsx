@@ -541,15 +541,19 @@ export default function App() {
           />
 
           {/* 2. Toolbar: Search, Sort, Filter, Export */}
-          <Toolbar
-            filterState={filterState}
-            setFilterState={setFilterState}
-            onOpenCreateModal={() =>
-              setTaskModalState({ isOpen: true, mode: 'create' })
-            }
-            onExportCSV={handleExportCSV}
-            totalFilteredCount={filteredTasks.length}
-          />
+          {/**
+
+             <Toolbar
+                         filterState={filterState}
+                         setFilterState={setFilterState}
+                         onOpenCreateModal={() =>
+                           setTaskModalState({ isOpen: true, mode: 'create' })
+                         }
+                         onExportCSV={handleExportCSV}
+                         totalFilteredCount={filteredTasks.length}
+                       /> */
+
+          }
 
           <TaskTable />
         </main>

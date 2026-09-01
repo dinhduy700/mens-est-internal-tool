@@ -26,45 +26,50 @@ class SubtaskService
 	/**
 	 * Xử lý logic cập nhật Subtask
 	 */
-	public function updateSubtask(int $id, array $data)
+	public function updateSubtask(int $taskId, int $id, array $data)
 	{
-		// 1. Kiểm tra subtask có tồn tại không
-		$subtask = $this->subtaskRepository->findById($id);
-
-		if (!$subtask) {
-			return null; // Trả về null để Controller biết là lỗi 404
-		}
-
-		// 2. Chuyển xuống Repository để lưu
-		return $this->subtaskRepository->update($id, $data);
-	}
-
-	public function deleteSubtask(int $id): bool
-	{
-		// 1. Kiểm tra subtask có tồn tại không
-		$subtask = $this->subtaskRepository->findById($id);
-
-		if (!$subtask) {
-			return false; // Báo lỗi không tìm thấy
-		}
-
-		// 2. Thực hiện xóa
-		return $this->subtaskRepository->delete($id);
-	}
-
-	/**
-	 * Xử lý logic cập nhật trạng thái Subtask
-	 */
-	public function updateStatus(int $id, int $status)
-	{
-		// 1. Kiểm tra xem subtask có tồn tại không
-		$subtask = $this->subtaskRepository->findById($id);
+		$subtask = $this->subtaskRepository->findByIdAndTaskId($taskId, $id);
 
 		if (!$subtask) {
 			return null;
 		}
 
-		// 2. Chuyển xuống Repository để lưu
-		return $this->subtaskRepository->updateStatus($id, $status);
+		return $this->subtaskRepository->update($taskId, $id, $data);
 	}
+
+	public function deleteSubtask(int $taskId, int $id): bool
+	{
+		$subtask = $this->subtaskRepository->findByIdAndTaskId($taskId, $id);
+
+		if (!$subtask) {
+			return false;
+		}
+
+		// 2. Thực hiện xóa
+		return $this->subtaskRepository->delete($taskId, $id);
+	}
+
+	/**
+	 * Xử lý logic cập nhật trạng thái Subtask
+	 */
+	public function updateStatus(int $taskId, int $id, int $status)
+	{
+		$subtask = $this->subtaskRepository->findByIdAndTaskId($taskId, $id);
+
+		if (!$subtask) {
+			return null;
+		}
+
+		if ((int)$subtask->status === $status) {
+			return $subtask;
+		}
+
+		$this->subtaskRepository->updateStatus($taskId, $id, $status);
+
+		$subtask->status = $status;
+		$subtask->updated_at = now()->toDateTimeString();
+
+		return $subtask;
+	}
+
 }

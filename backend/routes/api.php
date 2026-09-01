@@ -20,7 +20,7 @@ Route::prefix('v1')->group(function () {
 
 	/* subtasks */
 	Route::post('/subtasks', [SubtaskController::class, 'store']);
-	Route::put('/subtasks/{id}', [SubtaskController::class, 'update']);
-	Route::delete('/subtasks/{id}', [SubtaskController::class, 'destroy']);
-	Route::patch('/subtasks/{id}/status', [SubtaskController::class, 'updateStatus']);
+	Route::put('/tasks/{taskId}/subtasks/{subtaskId}', [SubtaskController::class, 'update']);
+	Route::delete('/tasks/{taskId}/subtasks/{subtaskId}', [SubtaskController::class, 'destroy']);
+	Route::patch('/tasks/{taskId}/subtasks/{subtaskId}/status', [SubtaskController::class, 'updateStatus']);
 });

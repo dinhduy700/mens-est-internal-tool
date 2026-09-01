@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { X, Check, ListPlus, User } from 'lucide-react';
 import { SubtaskModalState, TaskStatus } from '../types';
+import { TASK_STATUS_OPTIONS, getStatusBadgeConfig, TaskStatus as TaskStatusEnum } from '../../constants/taskStatus';
+import { taskService } from '../../services/taskService';
 
 interface SubtaskModalProps {
   modalState: SubtaskModalState;
@@ -19,44 +22,68 @@ interface SubtaskModalProps {
 
 export const SubtaskModal: React.FC<SubtaskModalProps> = ({
   modalState,
+  onSuccess,
   onClose,
   onSaveSubtask,
 }) => {
   const [title, setTitle] = useState('');
-  const [status, setStatus] = useState<TaskStatus>('TODO');
+  const [parentTaskId, setParentTaskId] = useState('');
+  const [subTaskId, setSubTaskId] = useState('');
+  const [parentTaskTitle, setParentTaskTitle] = useState('');
+  const [status, setStatus] = useState<TaskStatus>(TaskStatusEnum.NEW);
   const [assignee, setAssignee] = useState('');
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (modalState.isOpen) {
-      if (modalState.subtask) {
+      if (modalState.mode === 'add') {
+        setParentTaskTitle(modalState.parentTaskTitle);
+        setParentTaskId(modalState.parentTaskId);
+        setAssignee('Nguyễn Đinh Duy');
+      }
+
+      if (modalState.mode === 'edit') {
+        setParentTaskTitle(modalState.parentTaskTitle);
+        setParentTaskId(modalState.parentTaskId);
+        setSubTaskId(modalState.subtask.id);
         setTitle(modalState.subtask.title);
         setStatus(modalState.subtask.status);
-        setAssignee(modalState.subtask.assignee || '');
-        setNotes(modalState.subtask.notes || '');
-      } else {
-        setTitle('');
-        setStatus('TODO');
-        setAssignee('Nguyễn Đình Duy');
-        setNotes('');
+        setAssignee('Nguyễn Đinh Duy');
+        setNotes(modalState.subtask.note);
       }
     }
   }, [modalState]);
 
   if (!modalState.isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveSubtask = async (e: React.FormEvent) => {
     if (!title.trim()) return;
 
-    onSaveSubtask(modalState.parentTaskId, {
-      id: modalState.subtask?.id,
-      title: title.trim(),
-      status,
-      assignee: assignee.trim(),
-      notes: notes.trim(),
-    });
-    onClose();
+    try {
+        if (modalState.mode === 'edit') {
+          const response = await taskService.updateSubtask(parentTaskId, subTaskId, {
+                                                                                     title: title,
+                                                                                     status: status,
+                                                                                     notes: notes,
+                                                                                   });
+          toast.success('Lưu subtask thành công!');
+        } else {
+          const response = await taskService.createSubtask({
+            task_id: parentTaskId,
+            title: title,
+            status: status,
+            notes: notes,
+          });
+
+          toast.success('Thêm subtask thành công!');
+        }
+
+        if (onSuccess) onSuccess();
+        onClose();
+      } catch (error: any) {
+        console.error('Lỗi khi tạo subtask:', error);
+        toast.error('Không thể tạo subtask, vui lòng thử lại!');
+      }
   };
 
   return (
@@ -73,7 +100,7 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
                 {modalState.mode === 'edit' ? 'Chỉnh sửa Sub-task' : 'Thêm Sub-task mới'}
               </h3>
               <p className="text-xs text-slate-500 font-mono">
-                Task cha: <span className="font-bold text-blue-600">{modalState.parentTaskCode}</span>
+                Task cha: <span className="font-bold text-blue-600">{parentTaskTitle}</span>
               </p>
             </div>
           </div>
@@ -86,7 +113,7 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+        <form className="p-6 flex flex-col gap-4">
           {/* Parent task read-only info */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
@@ -94,7 +121,7 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
             </label>
             <input
               type="text"
-              value={modalState.parentTaskCode}
+              value={parentTaskTitle}
               disabled
               className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 font-mono cursor-not-allowed"
             />
@@ -126,12 +153,13 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 cursor-pointer"
               >
-                <option value="TODO">Chưa làm (To Do)</option>
-                <option value="DOING">Đang làm (Doing)</option>
-                <option value="DONE">Hoàn thành (Done)</option>
-                <option value="BLOCKED">Bị chặn (Blocked)</option>
+                  {TASK_STATUS_OPTIONS.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -176,8 +204,9 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
               Hủy
             </button>
             <button
-              type="submit"
+              type="button"
               disabled={!title.trim()}
+              onClick={() => handleSaveSubtask()}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
             >
               <Check className="w-4 h-4" />

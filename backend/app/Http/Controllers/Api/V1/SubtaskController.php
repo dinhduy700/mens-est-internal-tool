@@ -31,11 +31,11 @@ class SubtaskController extends Controller
 		return $this->successResponse(new SubtaskResource($subtask), 'Thêm subtask thành công', 201);
 	}
 
-	public function update(UpdateSubtaskRequest $request, $id)
+	public function update(UpdateSubtaskRequest $request, $taskId, $id)
 	{
-		$data = $request->validated();
+		$data = $request->all();
 
-		$subtask = $this->subtaskService->updateSubtask($id, $data);
+		$subtask = $this->subtaskService->updateSubtask($taskId, $id, $data);
 
 		if (!$subtask) {
 			return $this->errorResponse('Không tìm thấy subtask để cập nhật', 404);
@@ -48,9 +48,9 @@ class SubtaskController extends Controller
 	/**
 	 * Xóa 1 subtask
 	 */
-	public function destroy($id)
+	public function destroy($taskId, $id)
 	{
-		$isDeleted = $this->subtaskService->deleteSubtask($id);
+		$isDeleted = $this->subtaskService->deleteSubtask($taskId, $id);
 
 		if (!$isDeleted) {
 			return $this->errorResponse('Không tìm thấy subtask để xóa', 404);
@@ -63,12 +63,12 @@ class SubtaskController extends Controller
 	/**
 	 * Cập nhật nhanh trạng thái của subtask (Inline Edit)
 	 */
-	public function updateStatus(UpdateSubtaskStatusRequest $request, $id)
+	public function updateStatus(UpdateSubtaskStatusRequest $request, $taskId, $id)
 	{
 		// Lấy status an toàn đã qua validate
 		$data = $request->validated();
 
-		$subtask = $this->subtaskService->updateStatus($id, $data['status']);
+		$subtask = $this->subtaskService->updateStatus($taskId, $id, $data['status']);
 
 		if (!$subtask) {
 			return $this->errorResponse('Không tìm thấy subtask để cập nhật', 404);

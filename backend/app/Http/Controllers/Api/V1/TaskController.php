@@ -33,7 +33,7 @@ class TaskController extends Controller
 
 	public function store(TaskRequest $request)
 	{
-		$data = $request->validated();
+		$data = $request->all();
 		$task = $this->taskService->createTask($data);
 
 		return $this->successResponse(new TaskResource($task), 'Tạo task thành công', 201);
@@ -69,7 +69,7 @@ class TaskController extends Controller
 	public function update(TaskRequest $request, $id)
 	{
 		// 1. Lấy dữ liệu an toàn đã qua kiểm duyệt (và đã được tự động convert ngày tháng)
-		$data = $request->validated();
+		$data = $request->all();
 
 		// 2. Chuyển cho Service xử lý
 		$task = $this->taskService->updateTask($id, $data);

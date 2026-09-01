@@ -5,12 +5,14 @@ import { formatDateForInput } from '../../utils/date';
 
 interface DateEditModalProps {
   modalState: DateEditModalState;
+  errors?: Record<string, string>;
   onClose: () => void;
   onSaveDate: (taskId: string, fieldName: string, newDate: string) => void;
 }
 
 export const DateEditModal: React.FC<DateEditModalProps> = ({
   modalState,
+  errors,
   onClose,
   onSaveDate,
 }) => {
@@ -24,10 +26,16 @@ export const DateEditModal: React.FC<DateEditModalProps> = ({
 
   if (!modalState.isOpen) return null;
 
+  const errorMessage = errors?.[modalState.fieldName] || errors?.['date_value'];
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     onSaveDate(modalState.taskId, modalState.fieldName, selectedDate);
-    onClose();
+
+    const isErrorsEmpty = !errors || Object.keys(errors).length === 0;
+    if (isErrorsEmpty) {
+      onClose();
+    }
   };
 
   const setPresetToday = () => {
@@ -62,10 +70,10 @@ export const DateEditModal: React.FC<DateEditModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base">
-                Cập nhật {modalState.fieldLabel}
+                Cập nhật {modalState.fieldLabel} | {modalState.currentValue}
               </h3>
               <p className="text-xs text-slate-500 font-mono">
-                Task: {modalState.taskCode}
+                Task: {modalState.taskTitle}
               </p>
             </div>
           </div>
@@ -81,7 +89,7 @@ export const DateEditModal: React.FC<DateEditModalProps> = ({
         <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-              Chọn ngày (Datepicker)
+              Chọn ngày
             </label>
             <div className="relative">
               <input
@@ -89,10 +97,20 @@ export const DateEditModal: React.FC<DateEditModalProps> = ({
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+                className={`w-full px-4 py-2.5 bg-slate-50 border rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                  errorMessage
+                    ? 'border-rose-400 focus:ring-rose-500 focus:bg-white'
+                    : 'border-slate-300 focus:ring-blue-600 focus:bg-white'
+                }`}
                 autoFocus
               />
             </div>
+
+             {errorMessage && (
+               <p className="mt-1.5 text-xs text-rose-500 font-medium">
+                 {errorMessage}
+               </p>
+             )}
           </div>
 
           {/* Quick Presets */}

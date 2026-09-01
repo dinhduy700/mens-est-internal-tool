@@ -16,10 +16,7 @@ class SubtaskResource extends JsonResource
 			'id'         => $this->id,
 			'task_id'    => $this->task_id,
 			'title'      => $this->title,
-			'status'     => [
-				'value' => $this->status,
-				'label' => $statusEnum ? $statusEnum->label() : 'Unknown',
-			],
+			'status'     => $this->status,
 			'note'       => $this->note,
 		];
 	}

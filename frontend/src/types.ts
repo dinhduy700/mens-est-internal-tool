@@ -52,7 +52,7 @@ export interface FilterState {
 export interface DateEditModalState {
   isOpen: boolean;
   taskId: string;
-  taskCode: string;
+  taskTitle: string;
   fieldName: DateFieldType;
   fieldLabel: string;
   currentValue: string;
@@ -68,7 +68,7 @@ export interface TaskEditModalState {
 export interface SubtaskModalState {
   isOpen: boolean;
   parentTaskId: string;
-  parentTaskCode: string;
+  parentTaskTitle: string;
   subtask?: SubTask;
   mode: 'add' | 'edit';
 }
