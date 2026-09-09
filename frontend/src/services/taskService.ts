@@ -2,6 +2,13 @@ import { apiClient } from './api';
 import { TaskStatus } from '../constants/taskStatus';
 import { Priority } from '../constants/priority';
 
+export interface FetchTasksParams {
+  search_query?: string;
+  blocker?: number | string;
+  status?: number | string;
+  page?: number | string;
+}
+
 // Dữ liệu truyền lên khi tạo Task mới
 export interface CreateTaskDto {
   title: string;
@@ -50,8 +57,8 @@ export interface UpdateTaskDateDto {
 }
 
 export const taskService = {
-  getTasks: async () => {
-    const response = await apiClient.get('/tasks');
+  getTasks: async (params?: FetchTasksParams) => {
+    const response = await apiClient.get('/tasks', { params });
     return response.data; // Trả về data từ Backend
   },
 
@@ -64,6 +71,13 @@ export const taskService = {
   // Hàm cập nhật toàn bộ thông tin Task (PUT hoặc PATCH /tasks/{id})
   updateTask: async (taskId: number | string, data: UpdateTaskDto) => {
     const response = await apiClient.put(`/tasks/${taskId}`, data);
+    return response.data;
+  },
+
+  deleteTask: async (taskId: number | string) => {
+    const response = await apiClient.delete(
+        `/tasks/${taskId}`
+    );
     return response.data;
   },
 

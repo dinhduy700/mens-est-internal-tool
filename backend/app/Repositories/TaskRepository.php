@@ -8,9 +8,7 @@ use App\Models\Task;
 
 class TaskRepository
 {
-
-
-	public function getList(array $filters, int $perPage = 10)
+	public function getList(array $filters, int $perPage = 10, int $page = 1)
 	{
 		$query = clone $this->getBaseQuery();
 
@@ -21,7 +19,12 @@ class TaskRepository
 		$this->applyOrderBy($query, $filters);
 
 		// 3. Phân trang
-		$paginator = $query->paginate($perPage);
+		$paginator = $query->paginate(
+			perPage: $perPage,
+			columns: ['*'],
+			pageName: 'page',
+			page: $page
+		);
 
 		// 4. Gắn subtasks và trả về
 		return $this->loadSubtasks($paginator);
@@ -34,16 +37,16 @@ class TaskRepository
 
 	private function applyFilters($query, array $filters): void
 	{
-		if (isset($filters['status'])) {
+		if (isset($filters['status']) && $filters['status'] !== 'All') {
 			$query->where('status', $filters['status']);
 		}
 
-		if (isset($filters['blocker'])) {
+		if (isset($filters['blocker']) && $filters['blocker'] !== 'All') {
 			$query->where('blocker', $filters['blocker']);
 		}
 
-		if (!empty($filters['keyword'])) {
-			$query->where('title', 'LIKE', '%' . $filters['keyword'] . '%');
+		if (!empty($filters['search_query'])) {
+			$query->where('title', 'LIKE', '%' . $filters['search_query'] . '%');
 		}
 	}
 
@@ -164,5 +167,12 @@ class TaskRepository
 
 		// Lấy lại data mới nhất sau khi update để trả về (Dùng lại hàm findById đã tạo lúc trước)
 		return $this->findById($id);
+	}
+
+	public function delete(int $taskId): bool
+	{
+		return DB::table('tasks')
+				->where('id', $taskId)
+				->delete() > 0;
 	}
 }

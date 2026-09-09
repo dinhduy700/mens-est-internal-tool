@@ -82,4 +82,16 @@ class TaskController extends Controller
 		// 4. Trả về Response thành công kèm data mới
 		return $this->successResponse(new TaskResource($task), 'Cập nhật task thành công');
 	}
+
+	public function destroy($taskId)
+	{
+		$isDeleted = $this->taskService->deleteTask($taskId);
+
+		if (!$isDeleted) {
+			return $this->errorResponse('Không tìm thấy task để xóa', 404);
+		}
+
+		// Trả về data là null kèm câu thông báo thành công
+		return $this->successResponse(null, 'Xóa task thành công');
+	}
 }

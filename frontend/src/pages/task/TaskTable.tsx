@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+// @ts-ignore
 import { toast } from 'react-toastify';
+// @ts-ignore
 import Swal from 'sweetalert2';
 import {
   Edit,
@@ -28,7 +31,7 @@ import {
   DateEditModalState,
   BlockerModalState,
   NoteModalState
-} from '../types';
+} from '@/types';
 import { formatDateDisplay } from '../../utils/date';
 import { confirmDeleteSwal } from '../../utils/sweetAlert';
 
@@ -61,14 +64,27 @@ export const TaskTable: React.FC = () => {
   const [modalErrors, setModalErrors] = useState<Record<string, string>>({});
 
   // 2. Pagination State
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 10;
+  // const [currentPage, setCurrentPage] = useState<number>(1);
+  // const itemsPerPage = 10;
+
+  // Lấy params trực tiếp từ URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search_query') || '';
+  const blocker = searchParams.get('blocker') || 'All';
+  const status = searchParams.get('status') || 'All';
+  const page = searchParams.get('page') || '1';
 
   // 2. Hàm gọi API lấy danh sách Task
   const fetchTasks = async () => {
+    console.log('fetchTasks.....');
     setIsLoading(true);
     try {
-      const response = await taskService.getTasks();
+      const response = await taskService.getTasks({
+        search_query: searchQuery,
+        blocker: blocker,
+        status: status,
+        page: page,
+      });
       setTasks(response.data);
     } catch (error) {
       console.error('Lỗi khi tải danh sách task:', error);
@@ -80,7 +96,7 @@ export const TaskTable: React.FC = () => {
   // 3. Tự động gọi API khi Component vừa mount
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [searchQuery, blocker, status, page]);
 
   // 3. Modal States
   const [taskModalState, setTaskModalState] = useState<TaskEditModalState>({
@@ -128,12 +144,30 @@ export const TaskTable: React.FC = () => {
   }, [tasks, searchTerm, statusFilter]);
 
   // 5. Paginated Tasks Logic
-  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+  console.log(tasks);
+  const currentPage = Number(searchParams.get('page')) || 1;
+  const itemsPerPage = 10; // Thay đổi theo perPage backend trả về
+  const totalItems = tasks.meta.total || 0; // Đọc từ response paginate của Laravel
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(newPage));
+    setSearchParams(params);
+  };
+
+  const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const toItem = Math.min(currentPage * itemsPerPage, totalItems);
+  // const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
 //   const paginatedTasks = useMemo(() => {
 //     const startIndex = (currentPage - 1) * itemsPerPage;
 //     return filteredTasks.slice(startIndex, startIndex + itemsPerPage);
 //   }, [filteredTasks, currentPage, itemsPerPage]);
-//
+
+
+
+
 //   // 6. Action Handlers
   const handleOpenTaskModal = (task?: Task, targetFocus?: 'redmine' | 'all') => {
     const isEdit = Boolean(task && task.id);
@@ -257,7 +291,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
   // 2. Gọi Service để gửi API lên Backend
   try {
     await taskService.updateTaskDate(taskId, fieldName, formatDateToDMY(newDate));
-     toast.success('Cập nhật ngày thành công!');
+    toast.success('Cập nhật ngày thành công!');
   } catch (error) {
      if (error.response && error.response.status === 422) {
       const apiErrors = error.response.data.errors;
@@ -276,6 +310,29 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
   }
 };
 /* Save Date --- end*/
+
+  const handleDeleteTask = async (taskId: string) => {
+    // 1. Gọi SweetAlert2 thông qua helper đã thiết kế sẵn
+    const result = await confirmDeleteSwal({
+      title: 'Cảnh Báo Nguy Hiểm',
+      itemCode: taskId,
+    });
+
+    // 2. Nếu bấm Hủy Bỏ -> Dừng lại
+    if (!result.isConfirmed) return;
+
+    // 3. Thực thi API xóa
+    try {
+      await taskService.deleteTask(taskId);
+      toast.success('Đã xóa vĩnh viễn task!');
+      if (typeof fetchTasks === 'function') {
+        fetchTasks();
+      }
+    } catch (error) {
+      toast.error('Có lỗi xảy ra, không thể xóa!');
+    }
+  };
+
 
   const handleDeleteSubtask = async (taskId: string, subtaskId: string) => {
     // 1. Gọi SweetAlert2 thông qua helper đã thiết kế sẵn
@@ -298,22 +355,6 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
       toast.error('Có lỗi xảy ra, không thể xóa!');
     }
   };
-
-//
-//   const handleDuplicateTask = (task: Task) => {
-//     const duplicatedTask: Task = {
-//       ...task,
-//       id: Date.now().toString(),
-//       taskCode: `${task.taskCode}-COPY`,
-//       title: `${task.title} (Bản sao)`,
-//       createdAt: new Date().toISOString().split('T')[0],
-//       subtasks: task.subtasks?.map((sub) => ({
-//         ...sub,
-//         id: `sub-${Date.now()}-${Math.random()}`,
-//       })),
-//     };
-//     setTasks((prev) => [duplicatedTask, ...prev]);
-//   };
 
   const dateColumns: { key: string; label: string; shortLabel: string }[] = [
     { key: 'planned_dev_up', label: 'Planned DevUp', shortLabel: 'Plan DevUp' },
@@ -360,7 +401,6 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
         filterState={filterState}
         setFilterState={setFilterState}
         onOpenCreateModal={handleOpenTaskModal}
-        onExportCSV={handleExportCSV}
         totalFilteredCount={totalFilteredCount}
       />
 
@@ -415,7 +455,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                     : 'bg-white group-hover:bg-blue-50/50';
 
                   const globalIndex = (currentPage - 1) * itemsPerPage + index + 1;
-
+                  const statusBadgeConfig = getStatusBadgeConfig(task.status);
                   return (
                     <tr key={task.id} className="group transition-colors">
                       {/* STT */}
@@ -427,6 +467,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                       <td className={`sticky left-[48px] z-10 py-3.5 px-4 border-b border-r border-slate-200 pt-4 w-60 min-w-[240px] max-w-[240px] transition-colors ${rowBgClass}`}>
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
+
                             {task.redmineUrl ? (
                               <a
                                 href={task.redmineUrl}
@@ -438,9 +479,12 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                                 <ExternalLink className="w-3 h-3 stroke-[2.5]" />
                               </a>
                             ) : (
-                              <span className="font-bold text-slate-900 font-mono text-xs">
-                                {task.title}
-                              </span>
+                              <>
+                                <span className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${statusBadgeConfig.dotColor}`}></span>
+                                <span className="font-bold text-slate-900 font-mono text-xs">
+                                  {task.title}
+                                </span>
+                              </>
                             )}
 
                             <button
@@ -634,60 +678,109 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
 
           {/* Thanh Paging Bar */}
           <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 px-2 pb-12">
+            {/* Thông tin số lượng hiển thị */}
             <div>
               Hiển thị{' '}
-              <span className="font-semibold text-slate-800">
-                {filteredTasks.length === 0
-                  ? 0
-                  : (currentPage - 1) * itemsPerPage + 1}
-              </span>{' '}
-              đến{' '}
-              <span className="font-semibold text-slate-800">
-                {Math.min(currentPage * itemsPerPage, filteredTasks.length)}
-              </span>{' '}
-              trong tổng số{' '}
-              <span className="font-semibold text-slate-800">
-                {filteredTasks.length}
-              </span>{' '}
-              tasks
+              <span className="font-semibold text-slate-800">{fromItem}</span> đến{' '}
+              <span className="font-semibold text-slate-800">{toItem}</span> trong tổng số{' '}
+              <span className="font-semibold text-slate-800">{totalItems}</span> tasks
             </div>
 
+            {/* Cụm nút chuyển trang */}
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                title="Trang trước"
+                  type="button"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  title="Trang trước"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`w-7 h-7 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                    currentPage === pageNum
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {pageNum}
-                </button>
+                  <button
+                      key={pageNum}
+                      type="button"
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`w-7 h-7 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                          currentPage === pageNum
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
               ))}
 
               <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(p + 1, totalPages))
-                }
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                title="Trang sau"
+                  type="button"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  title="Trang sau"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
+
+
+          {/*<div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 px-2 pb-12">*/}
+          {/*  <div>*/}
+          {/*    Hiển thị{' '}*/}
+          {/*    <span className="font-semibold text-slate-800">*/}
+          {/*      {filteredTasks.length === 0*/}
+          {/*        ? 0*/}
+          {/*        : (currentPage - 1) * itemsPerPage + 1}*/}
+          {/*    </span>{' '}*/}
+          {/*    đến{' '}*/}
+          {/*    <span className="font-semibold text-slate-800">*/}
+          {/*      {Math.min(currentPage * itemsPerPage, filteredTasks.length)}*/}
+          {/*    </span>{' '}*/}
+          {/*    trong tổng số{' '}*/}
+          {/*    <span className="font-semibold text-slate-800">*/}
+          {/*      {filteredTasks.length}*/}
+          {/*    </span>{' '}*/}
+          {/*    tasks*/}
+          {/*  </div>*/}
+
+          {/*  <div className="flex items-center gap-1.5">*/}
+          {/*    <button*/}
+          {/*      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}*/}
+          {/*      disabled={currentPage === 1}*/}
+          {/*      className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"*/}
+          {/*      title="Trang trước"*/}
+          {/*    >*/}
+          {/*      <ChevronLeft className="w-4 h-4" />*/}
+          {/*    </button>*/}
+
+          {/*    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (*/}
+          {/*      <button*/}
+          {/*        key={pageNum}*/}
+          {/*        onClick={() => setCurrentPage(pageNum)}*/}
+          {/*        className={`w-7 h-7 rounded-md text-xs font-semibold transition-colors cursor-pointer ${*/}
+          {/*          currentPage === pageNum*/}
+          {/*            ? 'bg-blue-600 text-white shadow-xs'*/}
+          {/*            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'*/}
+          {/*        }`}*/}
+          {/*      >*/}
+          {/*        {pageNum}*/}
+          {/*      </button>*/}
+          {/*    ))}*/}
+
+          {/*    <button*/}
+          {/*      onClick={() =>*/}
+          {/*        setCurrentPage((p) => Math.min(p + 1, totalPages))*/}
+          {/*      }*/}
+          {/*      disabled={currentPage === totalPages || totalPages === 0}*/}
+          {/*      className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"*/}
+          {/*      title="Trang sau"*/}
+          {/*    >*/}
+          {/*      <ChevronRight className="w-4 h-4" />*/}
+          {/*    </button>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
         </>
       )}
 

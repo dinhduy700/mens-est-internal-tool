@@ -21,9 +21,10 @@ class TaskService
 
 	public function getListTasks(array $filters)
 	{
+		$page = $filters['page'] ?? 1;
 		$perPage = $filters['per_page'] ?? 10;
 
-		return $this->taskRepository->getList($filters, $perPage);
+		return $this->taskRepository->getList($filters, $perPage, $page);
 	}
 
 	public function createTask(array $data)
@@ -117,5 +118,17 @@ class TaskService
 		$data['release_date'] = !empty($data['release_date']) ? Carbon::createFromFormat('d/m/Y', $data['release_date'])->format('Y-m-d') : null;
 
 		return $this->taskRepository->update($id, $data);
+	}
+
+	public function deleteTask(int $taskId): bool
+	{
+		$task = $this->taskRepository->findById($taskId);
+
+		if (!$task) {
+			return false;
+		}
+
+		// 2. Thực hiện xóa
+		return $this->taskRepository->delete($taskId);
 	}
 }

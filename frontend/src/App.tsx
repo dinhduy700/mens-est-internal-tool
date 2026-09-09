@@ -509,28 +509,6 @@ export default function App() {
                 Theo dõi sub-tasks, timeline DevUp, release date và tình trạng blocker cho cả team.
               </p>
             </div>
-
-            <div className="flex items-center gap-2.5">
-              <button
-                id="btn-export-top"
-                onClick={handleExportCSV}
-                className="h-9 px-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm rounded-lg flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4 text-slate-500" />
-                <span>Export CSV</span>
-              </button>
-
-              <button
-                id="btn-create-task-top"
-                onClick={() =>
-                  setTaskModalState({ isOpen: true, mode: 'create' })
-                }
-                className="h-9 px-4 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-medium text-sm rounded-lg flex items-center gap-1.5 shadow-sm shadow-blue-900/20 transition-all cursor-pointer"
-              >
-                <Plus className="w-4 h-4 stroke-[2.5]" />
-                <span>Tạo Task Mới</span>
-              </button>
-            </div>
           </div>
 
           {/* 1. Tổng quan số task đang làm, chưa làm, đã hoàn thành */}
