@@ -47,14 +47,14 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="md:hidden w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
             <Layers className="w-4 h-4" />
           </div>
-          <div>
-            <h1 className="font-bold text-slate-900 text-lg tracking-tight leading-none">
-              X
-            </h1>
-            <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
-              Project Alpha • 2026
-            </span>
-          </div>
+          {/*<div>*/}
+          {/*  <h1 className="font-bold text-slate-900 text-lg tracking-tight leading-none">*/}
+          {/*    X*/}
+          {/*  </h1>*/}
+          {/*  <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">*/}
+          {/*    Project Alpha • 2026*/}
+          {/*  </span>*/}
+          {/*</div>*/}
         </div>
 
         {/* Desktop Top Tabs */}
