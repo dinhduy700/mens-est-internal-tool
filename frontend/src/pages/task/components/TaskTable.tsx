@@ -31,32 +31,16 @@ import {
   DateEditModalState,
   BlockerModalState,
   NoteModalState
-} from '@/types';
-import { formatDateDisplay } from '../../utils/date';
-import { confirmDeleteSwal } from '../../utils/sweetAlert';
+} from '@/types.ts';
+import { formatDateDisplay, formatDateToDMY } from '@/utils/date.ts';
+import { confirmDeleteSwal } from '@/utils/sweetAlert.ts';
 
-import { taskService } from '../../services/taskService';
-import { getPriorityInfo } from '../../constants/priority.ts';
-import { formatDateToDMY } from '../../utils/date';
-import { TASK_STATUS_OPTIONS, getStatusBadgeConfig, TaskStatus as TaskStatusEnum } from '../../constants/taskStatus';
-// Import các Modal Components của bạn ở đây:
-import { TaskModal } from './TaskModal';
-import { SubtaskModal } from './/SubtaskModal';
-import { DateEditModal } from './DateEditModal';
-import { Toolbar } from './Toolbar';
+import { taskService } from '@/services/taskService.ts';
+import { getPriorityInfo } from '@/constants/priority.ts';
+import { TASK_STATUS_OPTIONS, getStatusBadgeConfig } from '@/constants/taskStatus.ts';
+import { DateEditModal } from '@/pages/task/DateEditModal.tsx';
 
-// import { BlockerModal } from '../modal/BlockerModal';
-// import { NoteModal } from '../modal/NoteModal';
-
-
-export const TaskTable: React.FC = () => {
-  // 1. Task State & Filter States
-//   const [tasks, setTasks] = useState<Task[]>([]);
-  const [tasks, setTasks] = useState({
-      data: [],
-      links: {},
-      meta: {},
-  });
+export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onDeleteSuccess, onUpdateSubtaskStatus}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [activeMenuTaskId, setActiveMenuTaskId] = useState<string | null>(null);
@@ -73,30 +57,6 @@ export const TaskTable: React.FC = () => {
   const blocker = searchParams.get('blocker') || 'All';
   const status = searchParams.get('status') || 'All';
   const page = searchParams.get('page') || '1';
-
-  // 2. Hàm gọi API lấy danh sách Task
-  const fetchTasks = async () => {
-    console.log('fetchTasks.....');
-    setIsLoading(true);
-    try {
-      const response = await taskService.getTasks({
-        search_query: searchQuery,
-        blocker: blocker,
-        status: status,
-        page: page,
-      });
-      setTasks(response.data);
-    } catch (error) {
-      console.error('Lỗi khi tải danh sách task:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 3. Tự động gọi API khi Component vừa mount
-  useEffect(() => {
-    fetchTasks();
-  }, [searchQuery, blocker, status, page]);
 
   // 3. Modal States
   const [taskModalState, setTaskModalState] = useState<TaskEditModalState>({
@@ -116,59 +76,9 @@ export const TaskTable: React.FC = () => {
     fieldLabel: '',
     currentValue: '',
   });
-//   const [blockerModalState, setBlockerModalState] = useState<BlockerModalState>({
-//     isOpen: false,
-//     taskId: '',
-//     taskCode: '',
-//     hasBlocker: false,
-//     blockerDescription: '',
-//   });
-//   const [noteModalState, setNoteModalState] = useState<NoteModalState>({
-//     isOpen: false,
-//     taskId: '',
-//     taskCode: '',
-//     note: '',
-//   });
-
-  // 4. Filtered Tasks Logic
-  const filteredTasks = useMemo(() => {
-      return '123';
-//     return tasks.filter((task) => {
-//       const matchesSearch =
-//         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//         task.taskCode.toLowerCase().includes(searchTerm.toLowerCase());
-//       const matchesStatus =
-//         statusFilter === 'ALL' || task.status === statusFilter;
-//       return matchesSearch && matchesStatus;
-//     });
-  }, [tasks, searchTerm, statusFilter]);
-
-  // 5. Paginated Tasks Logic
-  console.log(tasks);
-  const currentPage = Number(searchParams.get('page')) || 1;
-  const itemsPerPage = 10; // Thay đổi theo perPage backend trả về
-  const totalItems = tasks.meta.total || 0; // Đọc từ response paginate của Laravel
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
-    const params = new URLSearchParams(searchParams);
-    params.set('page', String(newPage));
-    setSearchParams(params);
-  };
-
-  const fromItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const toItem = Math.min(currentPage * itemsPerPage, totalItems);
-  // const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
-//   const paginatedTasks = useMemo(() => {
-//     const startIndex = (currentPage - 1) * itemsPerPage;
-//     return filteredTasks.slice(startIndex, startIndex + itemsPerPage);
-//   }, [filteredTasks, currentPage, itemsPerPage]);
 
 
-
-
-//   // 6. Action Handlers
+  // 6. Action Handlers
   const handleOpenTaskModal = (task?: Task, targetFocus?: 'redmine' | 'all') => {
     const isEdit = Boolean(task && task.id);
     setTaskModalState({
@@ -207,72 +117,6 @@ export const TaskTable: React.FC = () => {
       currentValue: currentValue,
     });
   };
-//
-//   const handleOpenBlockerModal = (task: Task) => {
-//     setBlockerModalState({
-//       isOpen: true,
-//       taskId: task.id,
-//       taskCode: task.taskCode,
-//       hasBlocker: task.hasBlocker,
-//       blockerDescription: task.blockerDescription || '',
-//     });
-//   };
-//
-//   const handleOpenNoteModal = (task: Task) => {
-//     setNoteModalState({
-//       isOpen: true,
-//       taskId: task.id,
-//       taskCode: task.taskCode,
-//       note: task.note || '',
-//     });
-//   };
-//
-//   const handleUpdateSubtaskStatus = (taskId: string, subtaskId: string, newStatus: TaskStatus) => {
-//     setTasks((prev) =>
-//       prev.map((task) => {
-//         if (task.id !== taskId) return task;
-//         return {
-//           ...task,
-//           subtasks: task.subtasks?.map((sub) =>
-//             sub.id === subtaskId ? { ...sub, status: newStatus } : sub
-//           ),
-//         };
-//       })
-//     );
-//   };
-
-/* update status subtask --- start ---- */
-const handleUpdateSubtaskStatus = async (
-  taskId: number | string,
-  subtaskId: number | string,
-  newStatus: TaskStatus
-) => {
-  // 1. Cập nhật State UI trước (Optimistic UI)
-  setTasks((prevTasks: any) => ({
-    ...prevTasks,
-    data: (prevTasks.data || []).map((task: any) => {
-      if (task.id !== taskId) return task;
-
-      return {
-        ...task,
-        subtasks: task.subtasks?.map((sub: any) => {
-          if (sub.id !== subtaskId) return sub;
-          return { ...sub, status: newStatus };
-        }),
-      };
-    }),
-  }));
-
-  // 2. Gọi API cập nhật Backend
-  try {
-    await taskService.updateSubtaskStatus(taskId, subtaskId, newStatus);
-    toast.success('Cập nhật trạng thái subtask thành công!');
-  } catch (error) {
-    console.error('Lỗi khi cập nhật trạng thái subtask:', error);
-    alert('Cập nhật trạng thái thất bại, vui lòng thử lại!');
-  }
-};
-/* update status subtask --- end ---- */
 
 /* Save Date --- start ---- */
 const handleSaveDate = async (taskId: string, fieldName: string, newDate: string) => {
@@ -325,9 +169,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
     try {
       await taskService.deleteTask(taskId);
       toast.success('Đã xóa vĩnh viễn task!');
-      if (typeof fetchTasks === 'function') {
-        fetchTasks();
-      }
+      onDeleteSuccess();
     } catch (error) {
       toast.error('Có lỗi xảy ra, không thể xóa!');
     }
@@ -348,9 +190,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
     try {
       await taskService.deleteSubtask(taskId, subtaskId);
       toast.success('Đã xóa vĩnh viễn subtask!');
-      if (typeof fetchTasks === 'function') {
-        fetchTasks();
-      }
+      onDeleteSuccess();
     } catch (error) {
       toast.error('Có lỗi xảy ra, không thể xóa!');
     }
@@ -365,45 +205,8 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
     { key: 'release_date', label: 'Release Date', shortLabel: 'Release Date' },
   ];
 
-
-/* Mockdata sẽ xóa ==== start ==== */
-// 1. Mock State cho filterState
-  const [filterState, setFilterState] = useState({
-    search: '',
-    status: 'ALL',
-    priority: 'ALL',
-    assignee: 'ALL',
-    dateRange: {
-      from: '',
-      to: '',
-    },
-  });
-
-  // 2. Mock tổng số bản ghi đã filter
-  const totalFilteredCount = 12;
-
-  // 3. Mock Handler cho các nút hành động (Button Click Events)
-  const handleOpenCreateModal = () => {
-    console.log('Mock: Mở modal tạo Task');
-    alert('Mở modal tạo mới Task');
-  };
-
-  const handleExportCSV = () => {
-    console.log('Mock: Xuất file CSV với filter:', filterState);
-    alert('Đang xuất file CSV...');
-  };
-/* Mockdata sẽ xóa ==== end ==== */
-
   return (
     <div className="w-full">
-      {/* Search & Filter Header Bar */}
-      <Toolbar
-        filterState={filterState}
-        setFilterState={setFilterState}
-        onOpenCreateModal={handleOpenTaskModal}
-        totalFilteredCount={totalFilteredCount}
-      />
-
       {/* Main Table Content */}
       {(tasks.length == 0) ? (
         <div className="bg-white border border-slate-200 rounded-b-xl p-12 text-center shadow-sm">
@@ -426,7 +229,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                     #
                   </th>
                   <th className="sticky left-[48px] z-20 bg-slate-100 py-3 px-4 w-60 min-w-[240px] max-w-[240px] border-b border-r border-slate-200">
-                    Task (Redmine)
+                    Task
                   </th>
                   <th className="sticky left-[288px] z-20 bg-slate-100 py-3 px-4 w-72 min-w-[270px] border-b border-r border-slate-200">
                     Sub-task
@@ -446,7 +249,6 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                 </tr>
               </thead>
 
-              {/* Table Body (Sử dụng paginatedTasksThay vì tasks) */}
               <tbody className="text-xs text-slate-800 align-top">
                 {tasks.data.map((task, index) => {
                   const isDone = task.status === 7;
@@ -454,7 +256,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                     ? 'bg-slate-50 group-hover:bg-blue-50/50'
                     : 'bg-white group-hover:bg-blue-50/50';
 
-                  const globalIndex = (currentPage - 1) * itemsPerPage + index + 1;
+                  const globalIndex =  index + 1;
                   const statusBadgeConfig = getStatusBadgeConfig(task.status);
                   return (
                     <tr key={task.id} className="group transition-colors">
@@ -467,10 +269,10 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                       <td className={`sticky left-[48px] z-10 py-3.5 px-4 border-b border-r border-slate-200 pt-4 w-60 min-w-[240px] max-w-[240px] transition-colors ${rowBgClass}`}>
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-
-                            {task.redmineUrl ? (
+                            <span className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${statusBadgeConfig.dotColor}`}></span>
+                            {task.redmine_url ? (
                               <a
-                                href={task.redmineUrl}
+                                href={task.redmine_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="font-bold text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 font-mono text-xs"
@@ -480,7 +282,6 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                               </a>
                             ) : (
                               <>
-                                <span className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${statusBadgeConfig.dotColor}`}></span>
                                 <span className="font-bold text-slate-900 font-mono text-xs">
                                   {task.title}
                                 </span>
@@ -488,7 +289,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                             )}
 
                             <button
-                              onClick={() => handleOpenTaskModal(task, 'redmine')}
+                              onClick={() => onEditTask(task)}
                               className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
                             >
                               <Edit className="w-3.5 h-3.5" />
@@ -504,7 +305,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                           </div>
 
                           <p className={`text-xs text-slate-700 leading-snug line-clamp-3 ${isDone ? 'line-through text-slate-400' : ''}`}>
-                            Mô tả ngắn
+                            { task.note }
                           </p>
 
                           {task.assignee && (
@@ -538,7 +339,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                                       <select
                                         value={Number(sub.status ?? '')}
                                         onChange={(e) =>
-                                          handleUpdateSubtaskStatus(
+                                          onUpdateSubtaskStatus(
                                             task.id,
                                             sub.id,
                                             Number(e.target.value) as TaskStatus
@@ -554,7 +355,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                                       </select>
 
                                       <button
-                                        onClick={() => handleOpenSubtaskModal(task.id, task.title, sub)}
+                                        onClick={() => onOpenSubtaskModal(task.id, task.title, sub)}
                                         className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
                                       >
                                         <Edit className="w-3.5 h-3.5" />
@@ -578,7 +379,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
 
                           <div className="p-2 border-t border-slate-100 bg-slate-50/50 mt-auto">
                             <button
-                              onClick={() => handleOpenSubtaskModal(task.id, task.title)}
+                              onClick={() => onOpenSubtaskModal(task.id, task.title)}
                               className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 py-0.5 px-1.5 rounded hover:bg-blue-50 transition-colors cursor-pointer"
                             >
                               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -655,10 +456,6 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                                   <Edit className="w-3.5 h-3.5 text-blue-600" />
                                   <span>Chỉnh sửa toàn bộ</span>
                                 </button>
-                                <button onClick={() => { setActiveMenuTaskId(null); handleDuplicateTask(task); }} className="px-3 py-2 text-left hover:bg-slate-100 flex items-center gap-2 cursor-pointer">
-                                  <Copy className="w-3.5 h-3.5 text-slate-500" />
-                                  <span>Nhân bản Task</span>
-                                </button>
                                 <div className="h-px bg-slate-100 my-1"></div>
                                 <button onClick={() => { setActiveMenuTaskId(null); handleDeleteTask(task.id); }} className="px-3 py-2 text-left hover:bg-rose-50 text-rose-600 flex items-center gap-2 cursor-pointer">
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -675,123 +472,17 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
               </tbody>
             </table>
           </div>
-
-          {/* Thanh Paging Bar */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 px-2 pb-12">
-            {/* Thông tin số lượng hiển thị */}
-            <div>
-              Hiển thị{' '}
-              <span className="font-semibold text-slate-800">{fromItem}</span> đến{' '}
-              <span className="font-semibold text-slate-800">{toItem}</span> trong tổng số{' '}
-              <span className="font-semibold text-slate-800">{totalItems}</span> tasks
-            </div>
-
-            {/* Cụm nút chuyển trang */}
-            <div className="flex items-center gap-1.5">
-              <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                  title="Trang trước"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <button
-                      key={pageNum}
-                      type="button"
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`w-7 h-7 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                          currentPage === pageNum
-                              ? 'bg-blue-600 text-white shadow-xs'
-                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-                      }`}
-                  >
-                    {pageNum}
-                  </button>
-              ))}
-
-              <button
-                  type="button"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                  title="Trang sau"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-
-          {/*<div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 px-2 pb-12">*/}
-          {/*  <div>*/}
-          {/*    Hiển thị{' '}*/}
-          {/*    <span className="font-semibold text-slate-800">*/}
-          {/*      {filteredTasks.length === 0*/}
-          {/*        ? 0*/}
-          {/*        : (currentPage - 1) * itemsPerPage + 1}*/}
-          {/*    </span>{' '}*/}
-          {/*    đến{' '}*/}
-          {/*    <span className="font-semibold text-slate-800">*/}
-          {/*      {Math.min(currentPage * itemsPerPage, filteredTasks.length)}*/}
-          {/*    </span>{' '}*/}
-          {/*    trong tổng số{' '}*/}
-          {/*    <span className="font-semibold text-slate-800">*/}
-          {/*      {filteredTasks.length}*/}
-          {/*    </span>{' '}*/}
-          {/*    tasks*/}
-          {/*  </div>*/}
-
-          {/*  <div className="flex items-center gap-1.5">*/}
-          {/*    <button*/}
-          {/*      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}*/}
-          {/*      disabled={currentPage === 1}*/}
-          {/*      className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"*/}
-          {/*      title="Trang trước"*/}
-          {/*    >*/}
-          {/*      <ChevronLeft className="w-4 h-4" />*/}
-          {/*    </button>*/}
-
-          {/*    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (*/}
-          {/*      <button*/}
-          {/*        key={pageNum}*/}
-          {/*        onClick={() => setCurrentPage(pageNum)}*/}
-          {/*        className={`w-7 h-7 rounded-md text-xs font-semibold transition-colors cursor-pointer ${*/}
-          {/*          currentPage === pageNum*/}
-          {/*            ? 'bg-blue-600 text-white shadow-xs'*/}
-          {/*            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'*/}
-          {/*        }`}*/}
-          {/*      >*/}
-          {/*        {pageNum}*/}
-          {/*      </button>*/}
-          {/*    ))}*/}
-
-          {/*    <button*/}
-          {/*      onClick={() =>*/}
-          {/*        setCurrentPage((p) => Math.min(p + 1, totalPages))*/}
-          {/*      }*/}
-          {/*      disabled={currentPage === totalPages || totalPages === 0}*/}
-          {/*      className="p-1.5 border border-slate-200 rounded-md bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"*/}
-          {/*      title="Trang sau"*/}
-          {/*    >*/}
-          {/*      <ChevronRight className="w-4 h-4" />*/}
-          {/*    </button>*/}
-          {/*  </div>*/}
-          {/*</div>*/}
         </>
       )}
 
       {/* Render các Modals ngay tại đây khi state isOpen = true */}
-      {taskModalState.isOpen && (
-        <TaskModal
-          modalState={taskModalState}
-          onClose={() => setTaskModalState((prev) => ({ ...prev, isOpen: false }))}
-          onSuccess={fetchTasks}
-        />
-      )}
+      {/*{taskModalState.isOpen && (*/}
+      {/*  <TaskModal*/}
+      {/*    modalState={taskModalState}*/}
+      {/*    onClose={() => setTaskModalState((prev) => ({ ...prev, isOpen: false }))}*/}
+      {/*    onSuccess={fetchTasks}*/}
+      {/*  />*/}
+      {/*)}*/}
 
       {dateModalState.isOpen && (
         <DateEditModal
@@ -807,19 +498,19 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
         />
       )}
 
-      {subtaskModalState.isOpen && (
-        <SubtaskModal
-          modalState={subtaskModalState}
-          errors={modalErrors}
-          onClose={() =>
-            setSubtaskModalState((prev) => ({
-             ...prev,
-             isOpen: false,
-           }))
-          }
-         onSuccess={fetchTasks}
-        />
-        )}
+      {/*{subtaskModalState.isOpen && (*/}
+      {/*  <SubtaskModal*/}
+      {/*    modalState={subtaskModalState}*/}
+      {/*    errors={modalErrors}*/}
+      {/*    onClose={() =>*/}
+      {/*      setSubtaskModalState((prev) => ({*/}
+      {/*       ...prev,*/}
+      {/*       isOpen: false,*/}
+      {/*     }))*/}
+      {/*    }*/}
+      {/*   onSuccess={fetchTasks}*/}
+      {/*  />*/}
+      {/*  )}*/}
     </div>
   );
 };

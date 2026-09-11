@@ -94,4 +94,22 @@ class TaskController extends Controller
 		// Trả về data là null kèm câu thông báo thành công
 		return $this->successResponse(null, 'Xóa task thành công');
 	}
+
+	public function getStats(Request $request)
+	{
+		// Lấy filter nếu bạn muốn thống kê theo project_id, user_id, v.v...
+		$filters = $request->all();
+
+		$statsData = $this->taskService->getTaskStats($filters);
+
+		return $this->successResponse($statsData, 'Lấy thống kê task thành công');
+	}
+
+	public function quickView(Request $request)
+	{
+		$filters = $request->all();
+		$tasksToShowQuickView = $this->taskService->getTaskToShowQuickView($filters);
+
+		return $this->successResponse($tasksToShowQuickView, 'Lấy thống kê task thành công');
+	}
 }

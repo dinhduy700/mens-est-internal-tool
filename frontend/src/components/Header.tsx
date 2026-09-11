@@ -9,19 +9,14 @@ import {
 import { FilterState } from '../types';
 
 interface HeaderProps {
-  filterState: FilterState;
-  setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
-  onToggleMobileMenu: () => void;
-  activeTopTab: string;
-  setActiveTopTab: (tab: string) => void;
+  // filterState: FilterState;
+  // setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
+  // onToggleMobileMenu: () => void;
+  // activeTopTab: string;
+  // setActiveTopTab: (tab: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  filterState,
-  setFilterState,
-  onToggleMobileMenu,
-  activeTopTab,
-  setActiveTopTab,
 }) => {
   const topTabs = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -42,7 +37,6 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Left section: Title & Tabs */}
       <div className="flex items-center gap-6">
         <button
-          onClick={onToggleMobileMenu}
           className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
           aria-label="Toggle menu"
         >
@@ -64,24 +58,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Desktop Top Tabs */}
-        <nav className="hidden lg:flex items-center gap-1 pl-4 h-16 border-l border-slate-200">
-          {topTabs.map((tab) => {
-            const isActive = activeTopTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTopTab(tab.id)}
-                className={`h-16 px-3.5 text-sm font-medium border-b-2 flex items-center transition-colors cursor-pointer ${
-                  isActive
-                    ? 'border-blue-600 text-blue-700 font-semibold'
-                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
       </div>
 
       {/* Right section: Search, Actions, Profile */}

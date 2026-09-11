@@ -17,6 +17,15 @@ class TaskRequest extends FormRequest
 		return true;
 	}
 
+	protected function prepareForValidation()
+	{
+		if (! $this->has('blocker') || empty($this->blocker)) {
+			$this->merge([
+				 'blocker' => Blocker::NO->value,
+			]);
+		}
+	}
+
 	public function rules(): array
 	{
 		return [

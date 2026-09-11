@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { X, Check, ListPlus, User } from 'lucide-react';
 import { SubtaskModalState, TaskStatus } from '../types';
-import { TASK_STATUS_OPTIONS, getStatusBadgeConfig, TaskStatus as TaskStatusEnum } from '../../constants/taskStatus';
-import { taskService } from '../../services/taskService';
+import { TASK_STATUS_OPTIONS, getStatusBadgeConfig, TaskStatus as TaskStatusEnum } from '../../../constants/taskStatus.ts';
+import { taskService } from '../../../services/taskService.ts';
 
 interface SubtaskModalProps {
   modalState: SubtaskModalState;

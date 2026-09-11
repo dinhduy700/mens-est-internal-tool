@@ -10,23 +10,18 @@ import {
   AlertOctagon,
   FileSpreadsheet
 } from 'lucide-react';
-import { FilterState, SortField } from '@/types';
-import { BlockerOptions, Blocker as BlockerEnum } from '../../constants/blocker.ts';
-import { TASK_STATUS_OPTIONS } from "../../constants/taskStatus.ts";
+import { FilterState, SortField } from '@/types.ts';
+import { BlockerOptions, Blocker as BlockerEnum } from '../../../constants/blocker.ts';
+import { TASK_STATUS_OPTIONS } from "../../../constants/taskStatus.ts";
 interface ToolbarProps {
-  filterState: FilterState;
-  setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
-  onOpenCreateModal: () => void;
-  onExportCSV: () => void;
-  totalFilteredCount: number;
+  // filterState: FilterState;
+  // setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
+  onCreateTask: () => void;
+  // onExportCSV: () => void;
+  // totalFilteredCount: number;
 }
 
-export const Toolbar: React.FC<ToolbarProps> = ({
-  filterState,
-  setFilterState,
-  onOpenCreateModal,
-  totalFilteredCount,
-}) => {
+export const TaskToolbar: React.FC<ToolbarProps> = ({ onCreateTask }) => {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -95,29 +90,29 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     setSearchParams(params);
   };
 
-  const sortOptions: { value: SortField; label: string }[] = [
-    { value: 'createdAt', label: 'Ngày tạo (Create At)' },
-    { value: 'releaseDate', label: 'Ngày release (Release Date)' },
-    { value: 'planDevUp', label: 'Kế hoạch DevUp (Plan DevUp)' },
-    { value: 'actDevUp', label: 'Thực tế DevUp (Act. DevUp)' },
-    { value: 'taskCode', label: 'Mã Task / ID (Task Code)' },
-    { value: 'title', label: 'Tên Task' },
-    { value: 'status', label: 'Trạng thái (Status)' },
-  ];
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilterState((prev) => ({
-      ...prev,
-      sortField: e.target.value as SortField,
-    }));
-  };
-
-  const toggleSortOrder = () => {
-    setFilterState((prev) => ({
-      ...prev,
-      sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc',
-    }));
-  };
+  // const sortOptions: { value: SortField; label: string }[] = [
+  //   { value: 'createdAt', label: 'Ngày tạo (Create At)' },
+  //   { value: 'releaseDate', label: 'Ngày release (Release Date)' },
+  //   { value: 'planDevUp', label: 'Kế hoạch DevUp (Plan DevUp)' },
+  //   { value: 'actDevUp', label: 'Thực tế DevUp (Act. DevUp)' },
+  //   { value: 'taskCode', label: 'Mã Task / ID (Task Code)' },
+  //   { value: 'title', label: 'Tên Task' },
+  //   { value: 'status', label: 'Trạng thái (Status)' },
+  // ];
+  //
+  // const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setFilterState((prev) => ({
+  //     ...prev,
+  //     sortField: e.target.value as SortField,
+  //   }));
+  // };
+  //
+  // const toggleSortOrder = () => {
+  //   setFilterState((prev) => ({
+  //     ...prev,
+  //     sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc',
+  //   }));
+  // };
 
   const clearFilters = () => {
     // Bật cờ đánh dấu đang Clear
@@ -133,8 +128,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     // Cập nhật thẳng lên URL ngay lập tức
     setSearchParams(params);
   };
-
-  const isFilterActive = filterState.search || filterState.status !== 'ALL' || filterState.hasBlocker !== 'ALL';
 
   return (
     <div className="bg-white border border-slate-200 rounded-t-xl p-4 shadow-sm border-b-0">
@@ -196,14 +189,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               id="btn-filter-toggle"
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
               className={`h-9 px-3 border rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-                isFilterActive
-                  ? 'bg-blue-50 border-blue-300 text-blue-700'
-                  : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
               <Filter className="w-4 h-4" />
               <span>Bộ lọc</span>
-              {isFilterActive && (
+              { showFilterDropdown && (
                 <span className="w-2 h-2 rounded-full bg-blue-600 ml-0.5"></span>
               )}
             </button>
@@ -271,21 +262,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             )}
           </div>
 
-          {/* Export Button */}
-          {/*<button*/}
-          {/*  id="btn-export-csv"*/}
-          {/*  onClick={onExportCSV}*/}
-          {/*  title="Xuất danh sách sang file CSV"*/}
-          {/*  className="h-9 px-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"*/}
-          {/*>*/}
-          {/*  <Download className="w-4 h-4 text-slate-500" />*/}
-          {/*  <span className="hidden sm:inline">Export</span>*/}
-          {/*</button>*/}
-
           {/* Create Task Button */}
           <button
             id="btn-create-task-toolbar"
-            onClick={onOpenCreateModal}
+            onClick={ onCreateTask }
             className="h-9 px-4 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors shadow-sm shadow-blue-900/30 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />

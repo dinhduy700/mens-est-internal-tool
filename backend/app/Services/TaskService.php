@@ -131,4 +131,14 @@ class TaskService
 		// 2. Thực hiện xóa
 		return $this->taskRepository->delete($taskId);
 	}
+
+	public function getTaskStats(array $filters = []): array
+	{
+		return (array) $this->taskRepository->getTaskStats($filters);
+	}
+
+	public function getTaskToShowQuickView(array $filters = [])
+	{
+		return $this->taskRepository->getTaskToShowQuickView($filters);
+	}
 }

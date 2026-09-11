@@ -133,4 +133,14 @@ export const taskService = {
     });
     return response.data;
   },
+
+  getTaskStats: async () => {
+    const response = await apiClient.get('/tasks/stats');
+    return response.data;
+  },
+
+  getQuickViewTasks: async (params?: FetchTasksParams) => {
+    const response = await apiClient.get('/tasks/quick-view', { params });
+    return response.data;
+  },
 };

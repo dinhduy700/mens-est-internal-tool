@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 
 import { Task, TaskEditModalState, TaskStatus } from '../types';
-import { formatDateToDMY, formatDateForInput, formatDateDisplay } from '../../utils/date';
-import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '../../constants/taskStatus';
-import { PRIORITY_OPTIONS, Priority as PriorityEnum } from '../../constants/priority';
-import { Blocker as BlockerEnum } from '../../constants/blocker';
-import { taskService } from '../../services/taskService';
+import { formatDateToDMY, formatDateForInput, formatDateDisplay } from '../../../utils/date.ts';
+import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '../../../constants/taskStatus.ts';
+import { PRIORITY_OPTIONS, Priority as PriorityEnum } from '../../../constants/priority.ts';
+import { Blocker as BlockerEnum } from '../../../constants/blocker.ts';
+import { taskService } from '../../../services/taskService.ts';
 
 interface TaskModalProps {
   modalState: TaskEditModalState;

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\TaskStatus;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Task;
@@ -174,5 +175,40 @@ class TaskRepository
 		return DB::table('tasks')
 				->where('id', $taskId)
 				->delete() > 0;
+	}
+
+	public function getTaskStats(array $filters = [])
+	{
+		$query = $this->getBaseQuery();
+
+		$qb = $query->select(
+			DB::raw("SUM(CASE WHEN status = '" . TaskStatus::NEW->value . "' THEN 1 ELSE 0 END) as todo_count"),
+			DB::raw("SUM(CASE WHEN status = '" . TaskStatus::IN_PROGRESS->value . "' THEN 1 ELSE 0 END) as in_progress_count"),
+			DB::raw("SUM(CASE WHEN status = '" . TaskStatus::RELEASE->value . "' THEN 1 ELSE 0 END) as release_count"),
+
+			DB::raw("
+				SUM(
+					CASE
+						WHEN status = '" . TaskStatus::DEV_UP->value . "'
+						AND release_date IS NOT NULL
+						AND DATEDIFF(release_date, NOW()) <= 3
+						THEN 1
+						ELSE 0
+					END
+				) as near_release_count
+			"),
+
+			DB::raw("COUNT(id) as total")
+		)->first();
+
+		return $qb;
+	}
+
+	public function getTaskToShowQuickView($filters = [])
+	{
+		return DB::table('tasks')
+				->select('id', 'title')
+				->where('status', $filters['status'])
+				->get();
 	}
 }
