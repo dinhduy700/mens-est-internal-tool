@@ -140,10 +140,7 @@ export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onD
 
               <tbody className="text-xs text-slate-800 align-top">
                 {tasks.data.map((task, index) => {
-                  const isDone = task.status === 7;
-                  const rowBgClass = isDone
-                    ? 'bg-slate-50 group-hover:bg-blue-50/50'
-                    : 'bg-white group-hover:bg-blue-50/50';
+                  const rowBgClass = 'bg-white group-hover:bg-blue-50/50';
 
                   const globalIndex =  index + 1;
                   const statusBadgeConfig = getStatusBadgeConfig(task.status);
@@ -193,7 +190,7 @@ export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onD
                            )}
                           </div>
 
-                          <p className={`text-xs text-slate-700 leading-snug line-clamp-3 ${isDone ? 'line-through text-slate-400' : ''}`}>
+                          <p className={`text-xs text-slate-700 leading-snug line-clamp-3`}>
                             { task.note }
                           </p>
 
