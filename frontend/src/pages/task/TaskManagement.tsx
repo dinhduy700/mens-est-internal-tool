@@ -16,7 +16,7 @@ import {
 import { TaskToolbar } from '@/pages/task/components/TaskToolbar';
 import { TaskTable } from '@/pages/task/components/TaskTable';
 import { TaskPagination } from '@/pages/task/components/TaskPagination';
-import { TaskOverviewCards } from "@/pages/task/components/TaskOverviewCards.tsx";
+import {TaskOverviewCards, TaskStatsResponse} from "@/pages/task/components/TaskOverviewCards.tsx";
 import { taskService } from '@/services/taskService';
 import { TaskModal } from "@/pages/task/components/TaskModal.tsx";
 import { SubtaskModal } from "@/pages/task/components/SubtaskModal.tsx";
@@ -72,6 +72,15 @@ export const TaskManagement = () => {
     taskTitile: '',
     note: '',
   });
+
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [taskStats, setTaskStats] = useState({
+    todo_count: 0,
+    in_progress_count: 0,
+    near_release_count: 0,
+    release_count: 0,
+    total: 0
+  });
   /* ==== STATE(end) ==== */
 
 
@@ -111,6 +120,7 @@ export const TaskManagement = () => {
 
   const handleSaveSuccess = async () => {
     await fetchTasks();
+    setRefreshTrigger(prev => prev + 1);
     handleCloseTaskModal();
   };
 
@@ -141,7 +151,15 @@ export const TaskManagement = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [searchQuery, status, blocker, page]);
+  }, [searchQuery, status, blocker, page, refreshTrigger]);
+
+  useEffect(() => {
+    fetchTaskStats();
+  }, [refreshTrigger]);
+
+  const handleTaskModalSuccess = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const handleUpdateSubtaskStatus = async (
       taskId: number | string,
@@ -287,6 +305,32 @@ export const TaskManagement = () => {
     await saveNote(taskId, note);
     handleCloseNoteModal();
   };
+
+  const fetchTaskStats = async () => {
+    try {
+      const response = await taskService.getTaskStats();
+      setTaskStats(response.data); // Cập nhật state cho Cards
+    } catch (error) {
+      console.error("Lỗi khi lấy thống kê:", error);
+    }
+  };
+
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    try {
+      // Dùng Promise.all để chạy 2 API song song thay vì đợi cái này xong mới gọi cái kia
+      await Promise.all([
+        fetchTasks(),
+        fetchTaskStats()
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
   /* ==== HANDLE FUNCTION(end) ==== */
 
 
@@ -312,7 +356,7 @@ export const TaskManagement = () => {
           </div>
         </div>
 
-        <TaskOverviewCards tasks={tasks}/>
+        <TaskOverviewCards stats={taskStats}/>
 
         {/* 1. Bộ lọc */}
         <TaskToolbar onCreateTask={ handleOpenTaskModal }/>

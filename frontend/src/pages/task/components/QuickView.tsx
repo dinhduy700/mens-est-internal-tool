@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Clock, RotateCw, CheckCircle2, Flame, X, ArrowRight } from 'lucide-react';
+import { Clock, RotateCw, CheckCircle2, Flame, X, ArrowRight, ListTodo } from 'lucide-react';
 
 export type StatusFilter = 'TODO' | 'IN_PROGRESS' | 'NEAR_RELEASE' | 'RELEASE' | 'ALL';
 
@@ -132,8 +132,8 @@ export const QuickView: React.FC<QuickViewProps> = ({ activeStatus, tasks, onClo
                 onClick={onViewAll}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-100 transition-colors shadow-sm"
             >
-              Đi đến bộ lọc chi tiết ({tasks?.length || 0} tasks)
-              <ArrowRight className="w-4 h-4" />
+              <ListTodo className="w-4 h-4 text-blue-500" />
+              Tổng số: <span className="text-red-500 font-bold">{tasks?.length || 0}</span> công việc
             </button>
           </div>
         </div>

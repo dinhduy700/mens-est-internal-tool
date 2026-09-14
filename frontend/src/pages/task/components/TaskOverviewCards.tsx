@@ -18,8 +18,7 @@ export interface TaskStatsResponse {
   total: number;
 }
 
-export const TaskOverviewCards: React.FC<OverviewCardsProps> = () => {
-
+export const TaskOverviewCards: React.FC<OverviewCardsProps> = ({ stats } ) => {
   const STATUS_VALUE_MAP: Record<StatusFilter, number | string> = {
     TODO: 1,
     IN_PROGRESS: 2,
@@ -32,13 +31,6 @@ export const TaskOverviewCards: React.FC<OverviewCardsProps> = () => {
   /*==== STATES(start) ====*/
   const [activeStatus, setActiveStatus] = useState<StatusFilter>('DOING');
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-  const [stats, setStats] = useState<TaskStatsResponse>({
-    todo_count: 0,
-    in_progress_count: 0,
-    near_release_count: 0,
-    release_count: 0,
-    total: 0
-  });
 
   const [quickViewTasks, setQuickViewTasks] = useState<QuickViewTask[]>([]);
   const [isQuickViewLoading, setIsQuickViewLoading] = useState(false);
@@ -49,15 +41,6 @@ export const TaskOverviewCards: React.FC<OverviewCardsProps> = () => {
   const handleCardClick = (statusFilter: StatusFilter) => {
     setActiveStatus(statusFilter);
     setIsQuickViewOpen(true);
-  };
-
-  const fetchStats = async () => {
-    try {
-      const response = await taskService.getTaskStats();
-      setStats(response.data);
-    } catch (error) {
-      console.error("Lỗi khi lấy thống kê task:", error);
-    }
   };
 
   const fetchQuickViewData = async () => {
@@ -79,10 +62,6 @@ export const TaskOverviewCards: React.FC<OverviewCardsProps> = () => {
       setIsQuickViewLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
 
   useEffect(() => {
     fetchQuickViewData();
