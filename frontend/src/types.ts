@@ -84,6 +84,6 @@ export interface BlockerModalState {
 export interface NoteModalState {
   isOpen: boolean;
   taskId: string;
-  taskCode: string;
+  taskTitle: string;
   note: string;
 }

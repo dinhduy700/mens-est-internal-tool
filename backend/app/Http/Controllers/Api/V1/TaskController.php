@@ -112,4 +112,21 @@ class TaskController extends Controller
 
 		return $this->successResponse($tasksToShowQuickView, 'Lấy thống kê task thành công');
 	}
+
+	public function updateNote(Request $request, $id)
+	{
+		$formInputs = $request->all();
+		$note = $formInputs['note'];
+
+		$task = $this->taskService->updateTaskNote($id, $note);
+
+		if (!$task) {
+			return $this->errorResponse('Không tìm thấy task', 404);
+		}
+
+		return $this->successResponse(
+			new TaskResource($task),
+			'Đã cập nhật thành công!'
+		);
+	}
 }

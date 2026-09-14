@@ -20,6 +20,9 @@ import { TaskOverviewCards } from "@/pages/task/components/TaskOverviewCards.tsx
 import { taskService } from '@/services/taskService';
 import { TaskModal } from "@/pages/task/components/TaskModal.tsx";
 import { SubtaskModal } from "@/pages/task/components/SubtaskModal.tsx";
+import { DateEditModal } from "@/pages/task/DateEditModal.tsx";
+import { NoteModal } from "@/pages/task/NoteModal.tsx";
+import { formatDateToDMY } from '@/utils/date.ts';
 
 export const TaskManagement = () => {
 
@@ -52,6 +55,23 @@ export const TaskManagement = () => {
     parentTitle?: string;
     subtask?: SubTask;
   }>({ isOpen: false, mode: 'add' });
+
+  const [modalErrors, setModalErrors] = useState<Record<string, string>>({});
+  const [dateModalState, setDateModalState] = useState<DateEditModalState>({
+    isOpen: false,
+    taskId: '',
+    taskTitle: '',
+    fieldName: 'planned_dev_up',
+    fieldLabel: '',
+    currentValue: '',
+  });
+
+  const [noteModalState, setNoteModalState] = useState<NoteModalState>({
+    isOpen: false,
+    taskId: '',
+    taskTitile: '',
+    note: '',
+  });
   /* ==== STATE(end) ==== */
 
 
@@ -152,9 +172,122 @@ export const TaskManagement = () => {
       toast.error('Cập nhật thất bại, đang hoàn tác!');
     }
   };
+
+  const handleOpenDateModal = (
+      isOpen: boolean,
+      taskId: string,
+      taskTitle: string,
+      fieldName: DateFieldType,
+      fieldLabel: string,
+      currentValue: string
+  ) => {
+    setModalErrors({});
+    setDateModalState({
+      isOpen: true,
+      taskId: taskId,
+      taskTitle: taskTitle,
+      fieldName: fieldName,
+      fieldLabel: fieldLabel,
+      currentValue: currentValue,
+    });
+  };
+
+  /* Save Date --- start ---- */
+  const handleSaveDate = async (taskId: string, fieldName: string, newDate: string) => {
+    // 1. Cập nhật State UI ngay lập tức (Optimistic UI)
+    setTasks((prevTasks: any) => ({
+      ...prevTasks,
+      data: (prevTasks.data || []).map((task: any) => {
+        if (String(task.id) !== String(taskId)) return task;
+        return {
+          ...task,
+          [fieldName]: formatDateToDMY(newDate), // Cập nhật cột ngày tương ứng
+        };
+      }),
+    }));
+
+    // 2. Gọi Service để gửi API lên Backend
+    try {
+      await taskService.updateTaskDate(taskId, fieldName, formatDateToDMY(newDate));
+      toast.success('Cập nhật ngày thành công!');
+    } catch (error) {
+      if (error.response && error.response.status === 422) {
+        const apiErrors = error.response.data.errors;
+        const formattedErrors: Record<string, string> = {};
+
+        Object.keys(apiErrors).forEach((key) => {
+          formattedErrors[key] = apiErrors[key][0];
+        });
+
+        setModalErrors(formattedErrors);
+      } else {
+        setModalErrors({
+          [fieldName]: 'Có lỗi xảy ra, vui lòng thử lại sau!',
+        });
+      }
+    }
+  };
+  /* Save Date --- end*/
+  const handleCloseDateModal = () => {
+    setDateModalState({ isOpen: false });
+  };
+  const handleDateSaveSuccess = async (taskId: string, fieldName: string, newDate: string) => {
+    await handleSaveDate(taskId, fieldName, newDate);
+    handleCloseDateModal();
+  };
+
+  const handleOpenNoteModal = (task) => {
+    setNoteModalState({
+      isOpen: true,
+      taskId: task.id,
+      taskTitle: task.title,
+      note: task.note
+    });
+  };
+
+  const saveNote = async (taskId: string, note: string) => {
+    // 1. Cập nhật State UI ngay lập tức (Optimistic UI)
+    setTasks((prevTasks: any) => ({
+      ...prevTasks,
+      data: (prevTasks.data || []).map((task: any) => {
+        if (String(task.id) !== String(taskId)) return task;
+        return {
+          ...task,
+          note: note,
+        };
+      }),
+    }));
+
+    // 2. Gọi Service để gửi API lên Backend
+    try {
+      await taskService.updateTaskNote(taskId, note);
+      toast.success('Cập nhật Ghi chú thành công!');
+    } catch (error) {
+      if (error.response && error.response.status === 422) {
+        const apiErrors = error.response.data.errors;
+        const formattedErrors: Record<string, string> = {};
+
+        Object.keys(apiErrors).forEach((key) => {
+          formattedErrors[key] = apiErrors[key][0];
+        });
+
+        setModalErrors(formattedErrors);
+      } else {
+        setModalErrors({
+          note: 'Có lỗi xảy ra, vui lòng thử lại sau!',
+        });
+      }
+    }
+  };
+  const handleCloseNoteModal = () => {
+    setNoteModalState({ isOpen: false });
+  };
+
+  const handleNoteSaveSuccess = async (taskId: string, note: string) => {
+    await saveNote(taskId, note);
+    handleCloseNoteModal();
+  };
   /* ==== HANDLE FUNCTION(end) ==== */
-
-
 
 
 
@@ -189,6 +322,8 @@ export const TaskManagement = () => {
                    isLoading={isLoading}
                    onEditTask={handleOpenTaskModal}
                    onOpenSubtaskModal={handleOpenSubtaskModal}
+                   onOpenDateModal={handleOpenDateModal}
+                   onOpenNoteModal={handleOpenNoteModal}
                    onDeleteSuccess={fetchTasks}
                    onUpdateSubtaskStatus={handleUpdateSubtaskStatus}
         />
@@ -209,6 +344,22 @@ export const TaskManagement = () => {
             modalState={subtaskModalState}
             onClose={handleCloseSubtaskModal}
             onSuccess={handleSubtaskSaveSuccess}
+          />
+        )}
+        {dateModalState.isOpen && (
+          <DateEditModal
+              modalState={dateModalState}
+              errors={modalErrors}
+              onClose={handleCloseDateModal}
+              onSuccess={handleDateSaveSuccess}
+          />
+        )}
+        {noteModalState.isOpen && (
+          <NoteModal
+              modalState={noteModalState}
+              errors={modalErrors}
+              onClose={handleCloseNoteModal}
+              onSuccess={handleNoteSaveSuccess}
           />
         )}
       </div>

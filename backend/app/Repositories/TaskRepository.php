@@ -143,6 +143,17 @@ class TaskRepository
 		return $this->findById($id);
 	}
 
+	public function updateNote(int $id, string $note)
+	{
+		DB::table('tasks')
+			->where('id', $id)
+			->update([
+				'note' => $note,
+			]);
+
+		return $this->findById($id);
+	}
+
 	public function update(int $id, array $data)
 	{
 		$updateData = [

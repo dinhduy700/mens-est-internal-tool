@@ -101,6 +101,17 @@ class TaskService
 		return $this->taskRepository->updateField($id, $data['field'], Carbon::createFromFormat('d/m/Y', $data['date_value'])->format('Y-m-d'));
 	}
 
+	public function updateTaskNote(int $id, string $note)
+	{
+		$task = $this->taskRepository->findById($id);
+
+		if (!$task) {
+			return null;
+		}
+
+		return $this->taskRepository->updateNote($id, $note);
+	}
+
 	public function updateTask(int $id, array $data)
 	{
 		// 1. Kiểm tra task có tồn tại trong DB không

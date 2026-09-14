@@ -143,4 +143,12 @@ export const taskService = {
     const response = await apiClient.get('/tasks/quick-view', { params });
     return response.data;
   },
+
+  updateTaskNote: async (
+      taskId: number | string,
+      note: string,
+  ) => {
+    const response = await apiClient.patch(`/tasks/${taskId}/update-note`, { note: note });
+    return response.data;
+  },
 };

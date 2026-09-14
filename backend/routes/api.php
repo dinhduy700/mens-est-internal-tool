@@ -20,6 +20,7 @@ Route::prefix('v1')->group(function () {
 	Route::put('/tasks/{id}', [TaskController::class, 'update']);
 	Route::patch('/tasks/{id}/update-date', [TaskController::class, 'updateDate']);
 	Route::delete('/tasks/{taskId}', [TaskController::class, 'destroy']);
+	Route::patch('/tasks/{id}/update-note', [TaskController::class, 'updateNote']);
 
 
 	/* subtasks */

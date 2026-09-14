@@ -7,14 +7,14 @@ interface DateEditModalProps {
   modalState: DateEditModalState;
   errors?: Record<string, string>;
   onClose: () => void;
-  onSaveDate: (taskId: string, fieldName: string, newDate: string) => void;
+  onSuccess: (taskId: string, fieldName: string, newDate: string) => void;
 }
 
 export const DateEditModal: React.FC<DateEditModalProps> = ({
   modalState,
   errors,
   onClose,
-  onSaveDate,
+  onSuccess,
 }) => {
   const [selectedDate, setSelectedDate] = useState('');
 
@@ -30,7 +30,7 @@ export const DateEditModal: React.FC<DateEditModalProps> = ({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveDate(modalState.taskId, modalState.fieldName, selectedDate);
+    onSuccess(modalState.taskId, modalState.fieldName, selectedDate);
 
     const isErrorsEmpty = !errors || Object.keys(errors).length === 0;
     if (isErrorsEmpty) {

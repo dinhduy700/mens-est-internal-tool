@@ -5,13 +5,13 @@ import { NoteModalState } from '../types';
 interface NoteModalProps {
   modalState: NoteModalState;
   onClose: () => void;
-  onSaveNote: (taskId: string, note: string) => void;
+  onSuccess: (taskId: string, note: string) => void;
 }
 
 export const NoteModal: React.FC<NoteModalProps> = ({
   modalState,
   onClose,
-  onSaveNote,
+  onSuccess,
 }) => {
   const [note, setNote] = useState('');
 
@@ -25,7 +25,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveNote(modalState.taskId, note.trim());
+    onSuccess(modalState.taskId, note.trim());
     onClose();
   };
 
@@ -39,7 +39,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-base">Cập nhật Ghi chú (Note)</h3>
-              <p className="text-xs text-slate-500 font-mono">Task: {modalState.taskCode}</p>
+              <p className="text-xs text-slate-500 font-mono">Task: {modalState.taskTitle}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors">

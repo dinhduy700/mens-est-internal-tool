@@ -2,8 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 // @ts-ignore
 import { toast } from 'react-toastify';
-// @ts-ignore
-import Swal from 'sweetalert2';
+
 import {
   Edit,
   Plus,
@@ -38,123 +37,13 @@ import { confirmDeleteSwal } from '@/utils/sweetAlert.ts';
 import { taskService } from '@/services/taskService.ts';
 import { getPriorityInfo } from '@/constants/priority.ts';
 import { TASK_STATUS_OPTIONS, getStatusBadgeConfig } from '@/constants/taskStatus.ts';
-import { DateEditModal } from '@/pages/task/DateEditModal.tsx';
 
-export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onDeleteSuccess, onUpdateSubtaskStatus}) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onDeleteSuccess, onUpdateSubtaskStatus, onOpenDateModal, onOpenNoteModal}) => {
   const [activeMenuTaskId, setActiveMenuTaskId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [modalErrors, setModalErrors] = useState<Record<string, string>>({});
 
-  // 2. Pagination State
-  // const [currentPage, setCurrentPage] = useState<number>(1);
-  // const itemsPerPage = 10;
-
-  // Lấy params trực tiếp từ URL
-  const [searchParams, setSearchParams] = useSearchParams();
-  const searchQuery = searchParams.get('search_query') || '';
-  const blocker = searchParams.get('blocker') || 'All';
-  const status = searchParams.get('status') || 'All';
-  const page = searchParams.get('page') || '1';
-
   // 3. Modal States
-  const [taskModalState, setTaskModalState] = useState<TaskEditModalState>({
-    isOpen: false,
-    mode: 'add',
-  });
-  const [subtaskModalState, setSubtaskModalState] = useState<SubtaskModalState>({
-    isOpen: false,
-    taskId: '',
-    taskTitle: '',
-  });
-  const [dateModalState, setDateModalState] = useState<DateEditModalState>({
-    isOpen: false,
-    taskId: '',
-    taskTitle: '',
-    fieldName: 'planned_dev_up',
-    fieldLabel: '',
-    currentValue: '',
-  });
-
-
-  // 6. Action Handlers
-  const handleOpenTaskModal = (task?: Task, targetFocus?: 'redmine' | 'all') => {
-    const isEdit = Boolean(task && task.id);
-    setTaskModalState({
-      isOpen: true,
-      mode: isEdit ? 'edit' : 'add',
-      task,
-      targetFocus,
-    });
-  };
-
-  const handleOpenSubtaskModal = (parentTaskId: string, parentTaskTitle: string, subtask?: SubTask) => {
-    setSubtaskModalState({
-      isOpen: true,
-      parentTaskId,
-      parentTaskTitle,
-      subtask,
-      mode: subtask ? 'edit' : 'add',
-    });
-  };
-
-  const handleOpenDateModal = (
-    isOpen: boolean,
-    taskId: string,
-    taskTitle: string,
-    fieldName: DateFieldType,
-    fieldLabel: string,
-    currentValue: string
-  ) => {
-    setModalErrors({});
-    setDateModalState({
-      isOpen: true,
-      taskId: taskId,
-      taskTitle: taskTitle,
-      fieldName: fieldName,
-      fieldLabel: fieldLabel,
-      currentValue: currentValue,
-    });
-  };
-
-/* Save Date --- start ---- */
-const handleSaveDate = async (taskId: string, fieldName: string, newDate: string) => {
-  // 1. Cập nhật State UI ngay lập tức (Optimistic UI)
-  setTasks((prevTasks: any) => ({
-    ...prevTasks,
-    data: (prevTasks.data || []).map((task: any) => {
-      if (String(task.id) !== String(taskId)) return task;
-      return {
-        ...task,
-        [fieldName]: formatDateToDMY(newDate), // Cập nhật cột ngày tương ứng
-      };
-    }),
-  }));
-
-  // 2. Gọi Service để gửi API lên Backend
-  try {
-    await taskService.updateTaskDate(taskId, fieldName, formatDateToDMY(newDate));
-    toast.success('Cập nhật ngày thành công!');
-  } catch (error) {
-     if (error.response && error.response.status === 422) {
-      const apiErrors = error.response.data.errors;
-      const formattedErrors: Record<string, string> = {};
-
-      Object.keys(apiErrors).forEach((key) => {
-        formattedErrors[key] = apiErrors[key][0];
-      });
-
-      setModalErrors(formattedErrors);
-    } else {
-      setModalErrors({
-        [fieldName]: 'Có lỗi xảy ra, vui lòng thử lại sau!',
-      });
-    }
-  }
-};
-/* Save Date --- end*/
-
   const handleDeleteTask = async (taskId: string) => {
     // 1. Gọi SweetAlert2 thông qua helper đã thiết kế sẵn
     const result = await confirmDeleteSwal({
@@ -401,7 +290,7 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                               </span>
                               <button
                                 onClick={() => {
-                                  handleOpenDateModal(true, task.id, task.title, col.key, col.label, rawVal);
+                                  onOpenDateModal(true, task.id, task.title, col.key, col.label, rawVal);
                                 }}
                                 className="p-0.5 text-slate-300 group-hover/cell:text-blue-600 hover:bg-blue-50 rounded transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                               >
@@ -429,10 +318,10 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
                       {/* Note */}
                       <td className={`py-3.5 px-4 border-b border-r border-slate-200 pt-4 transition-colors ${rowBgClass}`}>
                         <div className="flex items-start justify-between gap-1 group/note">
-                          <p onClick={() => handleOpenNoteModal(task)} className="text-xs text-slate-600 italic line-clamp-3 hover:text-slate-900 cursor-pointer flex-1">
+                          <p onClick={() => onOpenNoteModal(task)} className="text-xs text-slate-600 italic line-clamp-3 hover:text-slate-900 cursor-pointer flex-1">
                             {task.note || <span className="text-slate-300">-</span>}
                           </p>
-                          <button onClick={() => handleOpenNoteModal(task)} className="p-1 text-slate-300 group-hover/note:text-blue-600 hover:bg-blue-50 rounded transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 cursor-pointer">
+                          <button onClick={() => onOpenNoteModal(task)} className="p-1 text-slate-300 group-hover/note:text-blue-600 hover:bg-blue-50 rounded transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 cursor-pointer">
                             <Edit className="w-3 h-3" />
                           </button>
                         </div>
@@ -474,43 +363,6 @@ const handleSaveDate = async (taskId: string, fieldName: string, newDate: string
           </div>
         </>
       )}
-
-      {/* Render các Modals ngay tại đây khi state isOpen = true */}
-      {/*{taskModalState.isOpen && (*/}
-      {/*  <TaskModal*/}
-      {/*    modalState={taskModalState}*/}
-      {/*    onClose={() => setTaskModalState((prev) => ({ ...prev, isOpen: false }))}*/}
-      {/*    onSuccess={fetchTasks}*/}
-      {/*  />*/}
-      {/*)}*/}
-
-      {dateModalState.isOpen && (
-        <DateEditModal
-          modalState={dateModalState}
-          errors={modalErrors}
-          onClose={() =>
-            setDateModalState((prev) => ({
-             ...prev,
-             isOpen: false,
-           }))
-          }
-         onSaveDate={handleSaveDate}
-        />
-      )}
-
-      {/*{subtaskModalState.isOpen && (*/}
-      {/*  <SubtaskModal*/}
-      {/*    modalState={subtaskModalState}*/}
-      {/*    errors={modalErrors}*/}
-      {/*    onClose={() =>*/}
-      {/*      setSubtaskModalState((prev) => ({*/}
-      {/*       ...prev,*/}
-      {/*       isOpen: false,*/}
-      {/*     }))*/}
-      {/*    }*/}
-      {/*   onSuccess={fetchTasks}*/}
-      {/*  />*/}
-      {/*  )}*/}
     </div>
   );
 };
