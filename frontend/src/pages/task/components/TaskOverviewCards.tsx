@@ -22,7 +22,7 @@ export const TaskOverviewCards: React.FC<OverviewCardsProps> = ({ stats } ) => {
   const STATUS_VALUE_MAP: Record<StatusFilter, number | string> = {
     TODO: 1,
     IN_PROGRESS: 2,
-    NEAR_RELEASE: 3,
+    NEAR_RELEASE: 6,
     RELEASE: 7,
     ALL: ''
   };
@@ -49,6 +49,7 @@ export const TaskOverviewCards: React.FC<OverviewCardsProps> = ({ stats } ) => {
     setIsQuickViewLoading(true);
     try {
       const status = STATUS_VALUE_MAP[activeStatus];
+
       // 2. TRUYỀN OBJECT PARAMS VÀO SERVICE
       const response = await taskService.getQuickViewTasks({
         status: status,
@@ -85,6 +86,7 @@ export const TaskOverviewCards: React.FC<OverviewCardsProps> = ({ stats } ) => {
               count={stats.near_release_count}
               isActive={activeStatus === 'NEAR_RELEASE'}
               onClick={() => handleCardClick('NEAR_RELEASE')}
+
           />
           <StatCard
               variant="TODO"
@@ -114,7 +116,6 @@ export const TaskOverviewCards: React.FC<OverviewCardsProps> = ({ stats } ) => {
                 onViewAll={() => {
                   setIsQuickViewOpen(false);
                   setActiveStatus('ALL');
-                  // Logic chuyển filter table...
                 }}
             />
         )}

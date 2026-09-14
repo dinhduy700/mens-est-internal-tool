@@ -217,9 +217,16 @@ class TaskRepository
 
 	public function getTaskToShowQuickView($filters = [])
 	{
-		return DB::table('tasks')
-				->select('id', 'title')
-				->where('status', $filters['status'])
-				->get();
+		$query = DB::table('tasks')->select('id', 'title', 'release_date');
+
+		if (isset($filters['status'])) {
+			$query->where('status', $filters['status']);
+
+			if ($filters['status'] == TaskStatus::DEV_UP->value) {
+				$query->whereDate('release_date', '<=', now()->addDays(3));
+			}
+		}
+
+		return $query->get();
 	}
 }
