@@ -4,33 +4,29 @@ import {
   X, 
   Check, 
   ExternalLink, 
-  Trash2, 
-  Plus,
-  AlertTriangle,
   FileText,
   Calendar,
   Layers
 } from 'lucide-react';
 
 import { Task, TaskEditModalState, TaskStatus } from '@/types';
-import { formatDateToDMY, formatDateForInput, formatDateDisplay } from '@/utils/date.ts';
+import { formatDateToDMY, formatDateForInput } from '@/utils/date.ts';
 import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '@/constants/taskStatus.ts';
 import { PRIORITY_OPTIONS, Priority as PriorityEnum } from '@/constants/priority.ts';
 import { Blocker as BlockerEnum } from '@/constants/blocker.ts';
 import { taskService } from '@/services/taskService.ts';
+import { APP_MESSAGES } from '@/constants/messages';
 
 interface TaskModalProps {
   modalState: TaskEditModalState;
   onSuccess: () => void;
   onClose: () => void;
-  onSaveTask: (task: Task) => void;
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({
   modalState,
   onSuccess,
   onClose,
-  onSaveTask,
 }) => {
   const [title, setTitle] = useState('');
   const [redmineUrl, setRedmineUrl] = useState('');
@@ -124,10 +120,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     try {
         if (modalState.mode === 'edit') {
           await taskService.updateTask(modalState.task.id, payload);
-          toast.success('Cập nhật công việc thành công!');
+          toast.success(APP_MESSAGES.SUCCESS.UPDATE_TASK);
         } else {
           await taskService.createTask(payload);
-          toast.success('Tạo mới công việc thành công!');
+          toast.success(APP_MESSAGES.SUCCESS.CREATE_TASK);
         }
 
       if (onSuccess) onSuccess();
@@ -143,7 +139,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
           setErrors(formattedErrors);
         } else {
-          setErrors({ api: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
+          setErrors({ api: APP_MESSAGES.ERROR.FAILED});
         }
     } finally {
       setIsSubmitting(false);

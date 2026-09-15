@@ -31,7 +31,7 @@ export default function App() {
 
       <ToastContainer
           position="top-right"
-          autoClose={3000} // Tự động đóng sau 3 giây
+          autoClose={3000}
           hideProgressBar={false}
           newestOnTop
           closeOnClick
@@ -39,8 +39,10 @@ export default function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
-        />
+          theme="colored"
+          toastClassName="rounded-2xl bg-slate-800 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.4)] border-2 border-emerald-500 min-h-[90px] p-4 flex items-center justify-center"
+          bodyClassName="text-slate-100 text-base font-medium text-center flex items-center justify-center gap-3"
+      />
     </div>
   );
 }

@@ -2,13 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Search,
-  ArrowUpDown,
   Filter,
-  Download,
   Plus,
   X,
-  AlertOctagon,
-  FileSpreadsheet,
   ArrowDown, ArrowUp
 } from 'lucide-react';
 import { FilterState, SortField } from '@/types.ts';
@@ -76,9 +72,9 @@ export const TaskToolbar: React.FC<ToolbarProps> = ({ onCreateTask, sortField, s
     const params = new URLSearchParams(searchParams);
 
     if (value === 'All') {
-      params.delete('status'); // Nếu chọn 'ALL' -> Xóa param 'status' khỏi URL
+      params.delete('status');
     } else {
-      params.set('status', value); // Set giá trị status (VD: 'todo', 'in_progress', 'done')
+      params.set('status', value);
     }
 
     // Đổi bộ lọc -> Reset về trang 1

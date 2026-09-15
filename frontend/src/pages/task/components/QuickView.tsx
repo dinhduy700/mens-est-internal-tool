@@ -33,7 +33,7 @@ const quickViewConfig = {
   },
 };
 
-export const QuickView: React.FC<QuickViewProps> = ({ activeStatus, tasks, onClose, onViewAll }) => {
+export const QuickView: React.FC = ({ activeStatus, tasks, onClose, onViewAll }) => {
   const config = quickViewConfig[activeStatus];
   const [isCopied, setIsCopied] = useState(false); // State quản lý trạng thái copy
   const showDate = activeStatus === 'NEAR_RELEASE';
@@ -46,28 +46,20 @@ export const QuickView: React.FC<QuickViewProps> = ({ activeStatus, tasks, onClo
     };
   }, []);
 
-
-
   const handleCopy = async () => {
     if (!tasks || tasks.length === 0) return;
 
-    // 1. Xác định ngày sẽ hiển thị trên Tiêu đề (Header)
     let dateStr = '';
 
     if (activeStatus === 'NEAR_RELEASE' && tasks[0]?.release_date) {
-      // Nếu là tab Sắp Release -> Lấy ngày release của task đầu tiên
       dateStr = formatDateToDMY(tasks[0].release_date);
     } else {
-      // Các tab khác (Đang làm, Chưa làm...) -> Lấy ngày hôm nay
       const today = new Date();
       dateStr = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
     }
 
-    // 2. Tạo Header text (Tiêu đề)
     const headerText = `[Các task ${config.title.toLowerCase()} ngày ${dateStr}]`;
 
-    // 3. Tạo Body text (Danh sách task)
-    // Vì ngày release đã đưa lên Header rồi nên từng task chỉ cần ID và Title là đủ gọn đẹp
     const bodyText = tasks.map((t, index) => `${index + 1}. ${t.title}`).join('\n');
 
     const textToCopy = `${headerText}\n${bodyText}`;
@@ -76,7 +68,6 @@ export const QuickView: React.FC<QuickViewProps> = ({ activeStatus, tasks, onClo
       await navigator.clipboard.writeText(textToCopy);
       setIsCopied(true);
 
-      // Trả lại icon cũ sau 2 giây
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error('Lỗi khi copy:', err);

@@ -1,18 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import {
-  Task,
-  SubTask,
-  TaskStatus,
-  DateFieldType,
-  TaskEditModalState,
-  SubtaskModalState,
-  DateEditModalState,
-  BlockerModalState,
-  NoteModalState
-} from '@/types.ts';
-
+import { Task, SubTask, TaskStatus, DateFieldType, DateEditModalState, NoteModalState } from '@/types.ts';
 import { TaskToolbar } from '@/pages/task/components/TaskToolbar';
 import { TaskTable } from '@/pages/task/components/TaskTable';
 import { TaskPagination } from '@/pages/task/components/TaskPagination';
@@ -23,6 +12,7 @@ import { SubtaskModal } from "@/pages/task/components/SubtaskModal.tsx";
 import { DateEditModal } from "@/pages/task/components/DateEditModal.tsx";
 import { NoteModal } from "@/pages/task/components/NoteModal.tsx";
 import { formatDateToDMY } from '@/utils/date.ts';
+import { APP_MESSAGES} from "@/constants/messages.ts";
 
 export const TaskManagement = () => {
 
@@ -117,7 +107,7 @@ export const TaskManagement = () => {
       setTotalItems(response.data.meta.total);
       setPerpage(response.data.meta.per_page);
     } catch (error) {
-      console.error('Lỗi khi tải danh sách tasks:', error);
+      console.error(APP_MESSAGES.ERROR.FAILED, error);
     } finally {
       setIsLoading(false);
     }
@@ -189,10 +179,10 @@ export const TaskManagement = () => {
     // 3. Gọi API lưu vào Database
     try {
       await taskService.updateSubtaskStatus(taskId, subtaskId, newStatus);
-      toast.success('Cập nhật trạng thái subtask thành công!');
+      toast.success(APP_MESSAGES.SUCCESS.UPDATE_SUBTASK);
     } catch (error) {
-      console.error('Lỗi khi cập nhật trạng thái subtask:', error);
-      toast.error('Cập nhật thất bại, đang hoàn tác!');
+      console.error(APP_MESSAGES.ERROR.FAILED, error);
+      toast.error(APP_MESSAGES.ERROR.FAILED);
     }
   };
 
@@ -232,7 +222,7 @@ export const TaskManagement = () => {
     // 2. Gọi Service để gửi API lên Backend
     try {
       await taskService.updateTaskDate(taskId, fieldName, formatDateToDMY(newDate));
-      toast.success('Cập nhật ngày thành công!');
+      toast.success(APP_MESSAGES.SUCCESS.DATE);
     } catch (error) {
       if (error.response && error.response.status === 422) {
         const apiErrors = error.response.data.errors;
@@ -245,7 +235,7 @@ export const TaskManagement = () => {
         setModalErrors(formattedErrors);
       } else {
         setModalErrors({
-          [fieldName]: 'Có lỗi xảy ra, vui lòng thử lại sau!',
+          [fieldName]: APP_MESSAGES.ERROR.FAILED,
         });
       }
     }
@@ -284,7 +274,8 @@ export const TaskManagement = () => {
     // 2. Gọi Service để gửi API lên Backend
     try {
       await taskService.updateTaskNote(taskId, note);
-      toast.success('Cập nhật Ghi chú thành công!');
+      toast.success(APP_MESSAGES.SUCCESS.UPDATE_NOTE);
+
     } catch (error) {
       if (error.response && error.response.status === 422) {
         const apiErrors = error.response.data.errors;
@@ -297,7 +288,7 @@ export const TaskManagement = () => {
         setModalErrors(formattedErrors);
       } else {
         setModalErrors({
-          note: 'Có lỗi xảy ra, vui lòng thử lại sau!',
+          note: APP_MESSAGES.ERROR.FAILED,
         });
       }
     }

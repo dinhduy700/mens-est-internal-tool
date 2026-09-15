@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState } from 'react';
 // @ts-ignore
 import { toast } from 'react-toastify';
 
@@ -11,23 +11,18 @@ import {
   Trash2,
   MoreHorizontal,
   User,
-  Copy,
   Clock,
-  Search,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  Loader2
 } from 'lucide-react';
 import {
   TaskStatus,
 } from '@/types.ts';
-import { formatDateDisplay, formatDateToDMY } from '@/utils/date.ts';
+import { formatDateDisplay } from '@/utils/date.ts';
 import { confirmDeleteSwal } from '@/utils/sweetAlert.ts';
 
 import { taskService } from '@/services/taskService.ts';
 import { getPriorityInfo } from '@/constants/priority.ts';
 import { TASK_STATUS_OPTIONS, getStatusBadgeConfig } from '@/constants/taskStatus.ts';
+import { APP_MESSAGES} from "@/constants/messages.ts";
 
 export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onDeleteSuccess, onUpdateSubtaskStatus, onOpenDateModal, onOpenNoteModal}) => {
   const [activeMenuTaskId, setActiveMenuTaskId] = useState<string | null>(null);
@@ -36,22 +31,19 @@ export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onD
 
   // 3. Modal States
   const handleDeleteTask = async (taskId: string) => {
-    // 1. Gọi SweetAlert2 thông qua helper đã thiết kế sẵn
     const result = await confirmDeleteSwal({
-      title: 'Cảnh Báo Nguy Hiểm',
+      title: APP_MESSAGES.CONFIRM_ALERT,
       itemCode: taskId,
     });
 
-    // 2. Nếu bấm Hủy Bỏ -> Dừng lại
     if (!result.isConfirmed) return;
 
-    // 3. Thực thi API xóa
     try {
       await taskService.deleteTask(taskId);
-      toast.success('Đã xóa vĩnh viễn task!');
+      toast.success(APP_MESSAGES.SUCCESS.DELETE_TASK);
       onDeleteSuccess();
     } catch (error) {
-      toast.error('Có lỗi xảy ra, không thể xóa!');
+      toast.error(APP_MESSAGES.ERROR.FAILED);
     }
   };
 
@@ -59,7 +51,7 @@ export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onD
   const handleDeleteSubtask = async (taskId: string, subtaskId: string) => {
     // 1. Gọi SweetAlert2 thông qua helper đã thiết kế sẵn
     const result = await confirmDeleteSwal({
-      title: 'Cảnh Báo Nguy Hiểm',
+      title: APP_MESSAGES.CONFIRM_ALERT,
       itemCode: subtaskId,
     });
 
@@ -69,10 +61,10 @@ export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onD
     // 3. Thực thi API xóa
     try {
       await taskService.deleteSubtask(taskId, subtaskId);
-      toast.success('Đã xóa vĩnh viễn subtask!');
+      toast.success(APP_MESSAGES.SUCCESS.DELETE_SUBTASK);
       onDeleteSuccess();
     } catch (error) {
-      toast.error('Có lỗi xảy ra, không thể xóa!');
+      toast.error(APP_MESSAGES.ERROR.FAILED);
     }
   };
 

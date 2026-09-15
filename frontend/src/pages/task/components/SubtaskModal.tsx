@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { X, Check, ListPlus, User } from 'lucide-react';
 import { SubtaskModalState, TaskStatus } from '@/types';
-import { TASK_STATUS_OPTIONS, getStatusBadgeConfig, TaskStatus as TaskStatusEnum } from '../../../constants/taskStatus.ts';
+import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '@/constants/taskStatus.ts';
 import { taskService } from '@/services/taskService.ts';
+import { APP_MESSAGES } from "@/constants/messages.ts";
 
 interface SubtaskModalProps {
   modalState: SubtaskModalState;
@@ -24,7 +25,6 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
   modalState,
   onSuccess,
   onClose,
-  onSaveSubtask,
 }) => {
   const [title, setTitle] = useState('');
   const [parentTaskId, setParentTaskId] = useState('');
@@ -66,7 +66,7 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
                                                                                      status: status,
                                                                                      notes: notes,
                                                                                    });
-          toast.success('Lưu subtask thành công!');
+          toast.success(APP_MESSAGES.SUCCESS.UPDATE_SUBTASK);
         } else {
           const response = await taskService.createSubtask({
             task_id: parentTaskId,
@@ -74,15 +74,13 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
             status: status,
             notes: notes,
           });
-
-          toast.success('Thêm subtask thành công!');
+          toast.success(APP_MESSAGES.SUCCESS.CREATE_TASK);
         }
 
         if (onSuccess) onSuccess();
         onClose();
       } catch (error: any) {
-        console.error('Lỗi khi tạo subtask:', error);
-        toast.error('Không thể tạo subtask, vui lòng thử lại!');
+        toast.error(APP_MESSAGES.ERROR.FAILED);
       }
   };
 
