@@ -13,48 +13,56 @@ interface StatCardProps {
 }
 
 const themeMap = {
-  IN_PROGRESS: {
-    activeStyle: 'border-blue-600 bg-blue-50/40 shadow-md',
-    inactiveStyle: 'border-slate-200 bg-white hover:border-blue-400 hover:shadow-md hover:bg-blue-50/10',
-    iconWrapper: 'bg-blue-50 border-blue-200/60 text-blue-600',
-    labelStyle: 'bg-blue-50 text-blue-700 border-blue-200/80',
-    clickIcon: 'text-blue-500',
-    label: 'Đang làm',
-    icon: <RotateCw className="w-4 h-4 animate-spin-slow" />,
-    desc: <p className="text-[11px] text-slate-500 mt-1">Cần tập trung hoàn thiện</p>,
-  },
-  NEAR_RELEASE: {
-    activeStyle: 'border-orange-500 bg-orange-50/40 shadow-md',
-    inactiveStyle: 'border-slate-200 bg-white hover:border-orange-400 hover:shadow-md hover:bg-orange-50/10',
-    iconWrapper: 'bg-orange-50 border-orange-200/60 text-orange-600',
-    labelStyle: 'bg-orange-50 text-orange-700 border-orange-200/80',
-    clickIcon: 'text-orange-500',
-    label: 'Sắp Release',
-    icon: <Flame className="w-4 h-4" />,
-    desc: (
-        <p className="text-[11px] text-orange-600 font-medium mt-1 flex items-center gap-1">
-          <AlertTriangle className="w-3 h-3 shrink-0" /> Đã sát hạn chót
-        </p>
-    ),
-  },
   TODO: {
-    activeStyle: 'border-slate-700 bg-slate-100/60 shadow-md',
-    inactiveStyle: 'border-slate-200 bg-white hover:border-slate-400 hover:shadow-md hover:bg-slate-50/50',
-    iconWrapper: 'bg-slate-100 border-slate-200 text-slate-700',
-    labelStyle: 'bg-slate-100 text-slate-700 border-slate-200/80',
-    clickIcon: 'text-slate-600',
+    // Sử dụng Slate (Xám xanh) - Thể hiện sự tĩnh lặng, chờ đợi, chưa kích hoạt.
+    activeStyle: 'border-slate-400 ring-4 ring-slate-100 bg-slate-50/80 shadow-sm',
+    inactiveStyle: 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md hover:bg-slate-50/50',
+    iconWrapper: 'bg-white border-slate-200 shadow-sm text-slate-600',
+    labelStyle: 'bg-slate-100 text-slate-700 border-slate-200/80 font-medium',
+    clickIcon: 'text-slate-400 group-hover:text-slate-600',
     label: 'Chưa làm',
     icon: <Clock className="w-4 h-4" />,
     desc: <p className="text-[11px] text-slate-500 mt-1">Sẵn sàng đưa vào tiến độ</p>,
   },
+
+  IN_PROGRESS: {
+    // Sử dụng Blue sáng - Thể hiện sự chủ động, hành động, đang vận hành.
+    activeStyle: 'border-blue-500 ring-4 ring-blue-50 bg-blue-50/50 shadow-sm',
+    inactiveStyle: 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-md hover:bg-blue-50/30',
+    iconWrapper: 'bg-blue-100 border-blue-200/60 text-blue-600 shadow-sm shadow-blue-100',
+    labelStyle: 'bg-blue-50 text-blue-700 border-blue-200/50 font-medium',
+    clickIcon: 'text-blue-400 group-hover:text-blue-600',
+    label: 'Đang làm',
+    icon: <RotateCw className="w-4 h-4 animate-spin-slow" />,
+    desc: <p className="text-[11px] text-slate-500 mt-1">Đang tập trung hoàn thiện</p>,
+  },
+
+  NEAR_RELEASE: {
+    // Sử dụng Amber (Cam vàng) thay vì Orange - Sang trọng hơn, tạo cảm giác cảnh báo (Warning) nhẹ nhàng nhưng sự tập trung cao độ.
+    activeStyle: 'border-amber-500 ring-4 ring-amber-50 bg-amber-50/50 shadow-sm',
+    inactiveStyle: 'border-slate-200 bg-white hover:border-amber-300 hover:shadow-md hover:bg-amber-50/30',
+    iconWrapper: 'bg-amber-100 border-amber-200/60 text-amber-600 shadow-sm shadow-amber-100',
+    labelStyle: 'bg-amber-50 text-amber-700 border-amber-200/50 font-medium',
+    clickIcon: 'text-amber-400 group-hover:text-amber-600',
+    label: 'Sắp Release',
+    icon: <Flame className="w-4 h-4" />,
+    desc: (
+        <p className="text-[11px] text-amber-600 font-medium mt-1 flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3 shrink-0" /> Đã sát hạn chót
+        </p>
+    ),
+  },
+
   RELEASE: {
-    activeStyle: 'border-emerald-600 bg-emerald-50/40 shadow-md',
-    inactiveStyle: 'border-slate-200 bg-white hover:border-emerald-400 hover:shadow-md hover:bg-emerald-50/10',
-    iconWrapper: 'bg-emerald-50 border-emerald-200/60 text-emerald-600',
-    labelStyle: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-    clickIcon: 'text-emerald-500',
-    label: 'Đã Release', // Đổi text thành Đã Release cho hợp ngữ cảnh
+    // Sử dụng Emerald (Xanh ngọc) - Thể hiện sự hoàn tất, thành công, an toàn.
+    activeStyle: 'border-emerald-500 ring-4 ring-emerald-50 bg-emerald-50/50 shadow-sm',
+    inactiveStyle: 'border-slate-200 bg-white hover:border-emerald-300 hover:shadow-md hover:bg-emerald-50/30',
+    iconWrapper: 'bg-emerald-100 border-emerald-200/60 text-emerald-600 shadow-sm shadow-emerald-100',
+    labelStyle: 'bg-emerald-50 text-emerald-700 border-emerald-200/50 font-medium',
+    clickIcon: 'text-emerald-400 group-hover:text-emerald-600',
+    label: 'Đã Release',
     icon: <CheckCircle2 className="w-4 h-4" />,
+    desc: <p className="text-[11px] text-slate-500 mt-1">Đã hoàn tất bàn giao</p>, // Bổ sung desc cho đồng bộ layout nếu cần
   },
 };
 
