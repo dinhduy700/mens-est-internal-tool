@@ -292,10 +292,9 @@ export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onD
                       {/* Blocker */}
                       <td className={`py-3.5 px-3 text-center border-b border-r border-slate-200 pt-4 transition-colors ${rowBgClass}`}>
                         <button
-                          onClick={() => handleOpenBlockerModal(task)}
                           className="inline-flex items-center gap-1 p-1 rounded cursor-pointer"
                         >
-                          {task.hasBlocker ? (
+                          {task.blocker ? (
                             <AlertTriangle className="w-4 h-4 text-rose-600 fill-rose-100" />
                           ) : (
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />

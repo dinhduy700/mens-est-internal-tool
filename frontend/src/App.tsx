@@ -1,8 +1,10 @@
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { TaskManagement } from './pages/task/TaskManagement';
+import { Routes, Route } from 'react-router-dom';
+
+import { Sidebar } from '@/components/Sidebar';
+import { Header } from '@/components/Header';
+import { TaskManagement } from '@/pages/task/TaskManagement';
 
 export default function App() {
   return (
@@ -16,8 +18,13 @@ export default function App() {
         {/* Scrollable Main Content Area */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 max-w-[1500px] w-full mx-auto">
 
+          <Routes>
+            <Route path="/" element={<TaskManagement />} />
+            {/*<Route path="/team-member" element={<MemberManagement />} />*/}
 
-          <TaskManagement />
+            {/* Có thể thêm trang 404 nếu người dùng gõ sai link */}
+            {/* <Route path="*" element={<NotFoundPage />} /> */}
+          </Routes>
 
         </main>
       </div>
