@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 // @ts-ignore
 import { toast } from 'react-toastify';
 
@@ -21,15 +20,7 @@ import {
   Loader2
 } from 'lucide-react';
 import {
-  Task,
-  SubTask,
   TaskStatus,
-  DateFieldType,
-  TaskEditModalState,
-  SubtaskModalState,
-  DateEditModalState,
-  BlockerModalState,
-  NoteModalState
 } from '@/types.ts';
 import { formatDateDisplay, formatDateToDMY } from '@/utils/date.ts';
 import { confirmDeleteSwal } from '@/utils/sweetAlert.ts';
@@ -85,13 +76,13 @@ export const TaskTable: React.FC = ({ tasks, onEditTask, onOpenSubtaskModal, onD
     }
   };
 
-  const dateColumns: { key: string; label: string; shortLabel: string }[] = [
-    { key: 'planned_dev_up', label: 'Planned DevUp', shortLabel: 'Plan DevUp' },
-    { key: 'actual_dev_up', label: 'Actual DevUp', shortLabel: 'Act. DevUp' },
-    { key: 'created_at', label: 'Created At', shortLabel: 'Created At' },
-    { key: 'actual_start', label: 'Actual Start', shortLabel: 'Act. Start' },
-    { key: 'actual_end', label: 'Actual End', shortLabel: 'Act. End' },
-    { key: 'release_date', label: 'Release Date', shortLabel: 'Release Date' },
+  const dateColumns: { key: string; label: string; }[] = [
+    { key: 'planned_dev_up', label: 'Planned DevUp' },
+    { key: 'actual_dev_up', label: 'Actual DevUp' },
+    { key: 'created_at', label: 'Created At' },
+    { key: 'actual_start', label: 'Actual Start' },
+    { key: 'actual_end', label: 'Actual End' },
+    { key: 'release_date', label: 'Release Date' },
   ];
 
   return (

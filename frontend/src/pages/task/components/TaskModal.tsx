@@ -12,12 +12,12 @@ import {
   Layers
 } from 'lucide-react';
 
-import { Task, TaskEditModalState, TaskStatus } from '../types';
-import { formatDateToDMY, formatDateForInput, formatDateDisplay } from '../../../utils/date.ts';
-import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '../../../constants/taskStatus.ts';
-import { PRIORITY_OPTIONS, Priority as PriorityEnum } from '../../../constants/priority.ts';
-import { Blocker as BlockerEnum } from '../../../constants/blocker.ts';
-import { taskService } from '../../../services/taskService.ts';
+import { Task, TaskEditModalState, TaskStatus } from '@/types';
+import { formatDateToDMY, formatDateForInput, formatDateDisplay } from '@/utils/date.ts';
+import { TASK_STATUS_OPTIONS, TaskStatus as TaskStatusEnum } from '@/constants/taskStatus.ts';
+import { PRIORITY_OPTIONS, Priority as PriorityEnum } from '@/constants/priority.ts';
+import { Blocker as BlockerEnum } from '@/constants/blocker.ts';
+import { taskService } from '@/services/taskService.ts';
 
 interface TaskModalProps {
   modalState: TaskEditModalState;
@@ -151,8 +151,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in duration-150">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col my-auto overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] animate-fade-in p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden w-full max-w-3xl flex flex-col animate-modal-in">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
           <div className="flex items-center gap-3">

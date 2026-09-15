@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, AlertTriangle, ShieldCheck } from 'lucide-react';
-import { BlockerModalState } from '../types';
+import { BlockerModalState } from '@/types';
 
 interface BlockerModalProps {
   modalState: BlockerModalState;

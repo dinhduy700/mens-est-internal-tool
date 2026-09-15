@@ -59,7 +59,7 @@ class TaskRepository
 
 		// Danh sách các cột cho phép (Whitelist) để chống SQL Injection
 		$allowedSortFields = [
-			'id', 'title', 'status', 'blocker', 'planned_dev_up', 'created_at'
+			'id', 'title', 'release_date', 'created_at'
 		];
 
 		// Kiểm tra xem cột gửi lên có hợp lệ không, tránh lỗi vỡ query

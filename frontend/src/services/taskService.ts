@@ -7,6 +7,8 @@ export interface FetchTasksParams {
   blocker?: number | string;
   status?: number | string;
   page?: number | string;
+  sort_by?: number | string;
+  sort_dir?: number | string;
 }
 
 // Dữ liệu truyền lên khi tạo Task mới

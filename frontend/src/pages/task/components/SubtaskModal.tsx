@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { X, Check, ListPlus, User } from 'lucide-react';
-import { SubtaskModalState, TaskStatus } from '../types';
+import { SubtaskModalState, TaskStatus } from '@/types';
 import { TASK_STATUS_OPTIONS, getStatusBadgeConfig, TaskStatus as TaskStatusEnum } from '../../../constants/taskStatus.ts';
-import { taskService } from '../../../services/taskService.ts';
+import { taskService } from '@/services/taskService.ts';
 
 interface SubtaskModalProps {
   modalState: SubtaskModalState;
@@ -87,8 +87,8 @@ export const SubtaskModal: React.FC<SubtaskModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] animate-fade-in p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden w-full max-w-xl flex flex-col animate-modal-in">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2.5">

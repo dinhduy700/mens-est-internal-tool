@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, FileText } from 'lucide-react';
-import { NoteModalState } from '../types';
+import { NoteModalState } from '@/types';
 
 interface NoteModalProps {
   modalState: NoteModalState;
@@ -30,8 +30,8 @@ export const NoteModal: React.FC<NoteModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] animate-fade-in p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden w-full max-w-md flex flex-col animate-modal-in">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">

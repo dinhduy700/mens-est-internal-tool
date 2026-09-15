@@ -8,20 +8,17 @@ import {
   Plus,
   X,
   AlertOctagon,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ArrowDown, ArrowUp
 } from 'lucide-react';
 import { FilterState, SortField } from '@/types.ts';
-import { BlockerOptions, Blocker as BlockerEnum } from '../../../constants/blocker.ts';
-import { TASK_STATUS_OPTIONS } from "../../../constants/taskStatus.ts";
+import { BlockerOptions, Blocker as BlockerEnum } from '@/constants/blocker.ts';
+import { TASK_STATUS_OPTIONS } from "@/constants/taskStatus.ts";
 interface ToolbarProps {
-  // filterState: FilterState;
-  // setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
   onCreateTask: () => void;
-  // onExportCSV: () => void;
-  // totalFilteredCount: number;
 }
 
-export const TaskToolbar: React.FC<ToolbarProps> = ({ onCreateTask }) => {
+export const TaskToolbar: React.FC<ToolbarProps> = ({ onCreateTask, sortField, sortDir, onSortChange }) => {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -90,29 +87,12 @@ export const TaskToolbar: React.FC<ToolbarProps> = ({ onCreateTask }) => {
     setSearchParams(params);
   };
 
-  // const sortOptions: { value: SortField; label: string }[] = [
-  //   { value: 'createdAt', label: 'Ngày tạo (Create At)' },
-  //   { value: 'releaseDate', label: 'Ngày release (Release Date)' },
-  //   { value: 'planDevUp', label: 'Kế hoạch DevUp (Plan DevUp)' },
-  //   { value: 'actDevUp', label: 'Thực tế DevUp (Act. DevUp)' },
-  //   { value: 'taskCode', label: 'Mã Task / ID (Task Code)' },
-  //   { value: 'title', label: 'Tên Task' },
-  //   { value: 'status', label: 'Trạng thái (Status)' },
-  // ];
-  //
-  // const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   setFilterState((prev) => ({
-  //     ...prev,
-  //     sortField: e.target.value as SortField,
-  //   }));
-  // };
-  //
-  // const toggleSortOrder = () => {
-  //   setFilterState((prev) => ({
-  //     ...prev,
-  //     sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc',
-  //   }));
-  // };
+  const sortOptions: { value: SortField; label: string }[] = [
+    { value: 'created_at', label: 'Ngày tạo' },
+    { value: 'release_date', label: 'Ngày release' },
+    { value: 'id', label: 'ID Task' },
+    { value: 'title', label: 'Tên công việc' }
+  ]
 
   const clearFilters = () => {
     // Bật cờ đánh dấu đang Clear
@@ -158,30 +138,31 @@ export const TaskToolbar: React.FC<ToolbarProps> = ({ onCreateTask }) => {
         <div className="flex flex-wrap items-center gap-2.5">
 
           {/* Sort Selection */}
-          {/*<div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">*/}
-          {/*  <div className="px-2.5 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:block border-r border-slate-200">*/}
-          {/*    Sắp xếp:*/}
-          {/*  </div>*/}
-          {/*  <select*/}
-          {/*    id="select-sort-field"*/}
-          {/*    value={filterState.sortField}*/}
-          {/*    onChange={handleSortChange}*/}
-          {/*    className="bg-transparent py-2 pl-3 pr-8 text-sm text-slate-800 font-medium focus:outline-none cursor-pointer"*/}
-          {/*  >*/}
-          {/*    {sortOptions.map((opt) => (*/}
-          {/*      <option key={opt.value} value={opt.value}>*/}
-          {/*        {opt.label}*/}
-          {/*      </option>*/}
-          {/*    ))}*/}
-          {/*  </select>*/}
-          {/*  <button*/}
-          {/*    onClick={toggleSortOrder}*/}
-          {/*    title={`Thứ tự: ${filterState.sortOrder === 'asc' ? 'Tăng dần' : 'Giảm dần'}`}*/}
-          {/*    className="px-2.5 py-2 hover:bg-slate-200/60 text-slate-600 transition-colors border-l border-slate-200"*/}
-          {/*  >*/}
-          {/*    <ArrowUpDown className="w-4 h-4" />*/}
-          {/*  </button>*/}
-          {/*</div>*/}
+          <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+            <div className="px-2.5 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:block border-r border-slate-200">
+              Sắp xếp:
+            </div>
+            <select
+                id="select-sort-field"
+                value={sortField} // Lấy value từ props thay vì hardcode 123
+                onChange={(e) => onSortChange(e.target.value, sortDir)} // Giữ nguyên chiều, chỉ đổi field
+                className="bg-transparent py-2 pl-3 pr-8 text-sm text-slate-800 font-medium focus:outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+            >
+              {sortOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+              ))}
+            </select>
+            <button
+                onClick={() => onSortChange(sortField, sortDir === 'asc' ? 'desc' : 'asc')} // Đảo chiều asc <-> desc
+                title={`Thứ tự: ${sortDir === 'asc' ? 'Tăng dần' : 'Giảm dần'}`}
+                className="px-2.5 py-2 hover:bg-slate-200/60 text-slate-600 transition-colors border-l border-slate-200 flex items-center justify-center w-9"
+            >
+              {/* Đổi icon trực quan theo chiều */}
+              {sortDir === 'asc' ? <ArrowUp className="w-4 h-4 text-blue-600" /> : <ArrowDown className="w-4 h-4 text-slate-600" />}
+            </button>
+          </div>
 
           {/* Filter Dropdown Toggle */}
           <div className="relative d-flex">

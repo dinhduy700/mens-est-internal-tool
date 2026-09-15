@@ -20,8 +20,8 @@ import {TaskOverviewCards, TaskStatsResponse} from "@/pages/task/components/Task
 import { taskService } from '@/services/taskService';
 import { TaskModal } from "@/pages/task/components/TaskModal.tsx";
 import { SubtaskModal } from "@/pages/task/components/SubtaskModal.tsx";
-import { DateEditModal } from "@/pages/task/DateEditModal.tsx";
-import { NoteModal } from "@/pages/task/NoteModal.tsx";
+import { DateEditModal } from "@/pages/task/components/DateEditModal.tsx";
+import { NoteModal } from "@/pages/task/components/NoteModal.tsx";
 import { formatDateToDMY } from '@/utils/date.ts';
 
 export const TaskManagement = () => {
@@ -81,6 +81,9 @@ export const TaskManagement = () => {
     release_count: 0,
     total: 0
   });
+
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   /* ==== STATE(end) ==== */
 
 
@@ -104,9 +107,11 @@ export const TaskManagement = () => {
     try {
       const response = await taskService.getTasks({
         search_query: searchQuery,
-        status,
-        blocker,
-        page,
+        status: status,
+        blocker: blocker,
+        page: page,
+        sort_by: sortField,
+        sort_dir: sortDir
       });
       setTasks(response.data);
       setTotalItems(response.data.meta.total);
@@ -151,7 +156,7 @@ export const TaskManagement = () => {
 
   useEffect(() => {
     fetchTasks();
-  }, [searchQuery, status, blocker, page, refreshTrigger]);
+  }, [searchQuery, status, blocker, page, sortField, sortDir, refreshTrigger]);
 
   useEffect(() => {
     fetchTaskStats();
@@ -331,6 +336,13 @@ export const TaskManagement = () => {
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  const handleSortChange = (field: string, dir: 'asc' | 'desc') => {
+    setSortField(field);
+    setSortDir(dir);
+    // Khi sort, thường ta sẽ đưa page về 1 để UX tốt hơn
+    setPage(1);
+  };
   /* ==== HANDLE FUNCTION(end) ==== */
 
 
@@ -359,7 +371,11 @@ export const TaskManagement = () => {
         <TaskOverviewCards stats={taskStats}/>
 
         {/* 1. Bộ lọc */}
-        <TaskToolbar onCreateTask={ handleOpenTaskModal }/>
+        <TaskToolbar onCreateTask={ handleOpenTaskModal }
+                     sortField={sortField}
+                     sortDir={sortDir}
+                     onSortChange={handleSortChange}
+        />
 
         {/* 2. Bảng dữ liệu */}
         <TaskTable tasks={tasks}
