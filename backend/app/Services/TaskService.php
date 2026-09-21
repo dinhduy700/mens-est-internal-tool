@@ -98,7 +98,11 @@ class TaskService
 			return null;
 		}
 
-		return $this->taskRepository->updateField($id, $data['field'], Carbon::createFromFormat('d/m/Y', $data['date_value'])->format('Y-m-d'));
+		$formattedDate = !empty($data['date_value'])
+			? Carbon::createFromFormat('d/m/Y', $data['date_value'])->format('Y-m-d')
+			: null;
+
+		return $this->taskRepository->updateField($id, $data['field'], $formattedDate);
 	}
 
 	public function updateTaskNote(int $id, string $note)
